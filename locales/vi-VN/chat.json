@@ -52,7 +52,7 @@
   "historySummary": "Tóm tắt tin tức lịch sử",
   "inbox": {
     "desc": "Kích hoạt cụm não, khơi dậy tia lửa tư duy. Trợ lý thông minh của bạn, ở đây để trò chuyện với bạn về mọi thứ.",
-    "title": "Chuyện phiếm"
+    "title": "Trò chuyện"
   },
   "input": {
     "addAi": "Thêm một tin nhắn AI",
@@ -269,5 +269,9 @@
       }
     }
   },
-  "zenMode": "Chế độ tập trung"
+  "zenMode": "Chế độ tập trung",
+  "tab": {
+    "historyChat": "Lịch sử",
+    "assistantList": "D.S trợ lý"
+  }
 }

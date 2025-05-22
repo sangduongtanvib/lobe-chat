@@ -3,13 +3,13 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ThemeSwatchesPrimary = memo<{
-  onChange?: (v: PrimaryColors) => void;
+  onChange?: (_v: PrimaryColors) => void;
   value?: PrimaryColors;
 }>(({ onChange, value }) => {
   const { t } = useTranslation('color');
 
-  const handleSelect = (v: any) => {
-    const name = findCustomThemeName('primary', v) as PrimaryColors;
+  const handleSelect = (_v: any) => {
+    const name = findCustomThemeName('primary', _v) as PrimaryColors;
     onChange?.(name || '');
   };
 

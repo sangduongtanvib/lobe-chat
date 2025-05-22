@@ -1,0 +1,9 @@
+/* 
+  Global style for branding name 
+  This ensures any use of BRANDING_NAME text will have the orange color
+*/
+
+.branding-name,
+span[data-branding="true"] {
+  color: #f37920;
+}

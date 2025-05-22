@@ -5,8 +5,12 @@ import { BRANDING_NAME } from '@/const/branding';
 import { DEFAULT_LANG } from '@/const/locale';
 import { OG_URL } from '@/const/url';
 import { Locales, locales } from '@/locales/resources';
+import styles from '@/styles/branding.module.css';
 import { getCanonicalUrl } from '@/server/utils/url';
 import { formatDescLength, formatTitleLength } from '@/utils/genOG';
+
+// Create a styled version of the branding name
+const StyledBrandingName = `<span class="${styles.brandingName}">${BRANDING_NAME}</span>`;
 
 export class Meta {
   public generate({
@@ -34,7 +38,7 @@ export class Meta {
     const formatedTitle = formatTitleLength(title, 21);
     // eslint-disable-next-line no-param-reassign
     const formatedDescription = formatDescLength(description, tags);
-    const siteTitle = title.includes(BRANDING_NAME) ? title : title + ` · ${BRANDING_NAME}`;
+    const siteTitle = title.includes(BRANDING_NAME) ? title : title + ` · ${StyledBrandingName}`;
     return {
       alternates: {
         canonical:

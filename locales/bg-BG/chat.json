@@ -269,5 +269,9 @@
       }
     }
   },
-  "zenMode": "Режим на фокус"
+  "zenMode": "Режим на фокус",
+  "tab": {
+    "historyChat": "История",
+    "assistantList": "Асистенти"
+  }
 }

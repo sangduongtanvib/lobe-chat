@@ -269,5 +269,9 @@
       }
     }
   },
-  "zenMode": "專注模式"
+  "zenMode": "專注模式",
+  "tab": {
+    "historyChat": "歷史記錄",
+    "assistantList": "助手列表"
+  }
 }

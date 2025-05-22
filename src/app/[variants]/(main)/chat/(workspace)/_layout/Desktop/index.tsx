@@ -6,9 +6,10 @@ import BrandTextLoading from '@/components/Loading/BrandTextLoading';
 import { LayoutProps } from '../type';
 import ChatHeader from './ChatHeader';
 import Portal from './Portal';
-import TopicPanel from './TopicPanel';
+// We're not using TopicPanel anymore since we've moved it to the session sidebar
+// import TopicPanel from './TopicPanel';
 
-const Layout = ({ children, topic, conversation, portal }: LayoutProps) => {
+const Layout = ({ children, conversation, portal }: LayoutProps) => {
   return (
     <>
       <ChatHeader />
@@ -29,7 +30,7 @@ const Layout = ({ children, topic, conversation, portal }: LayoutProps) => {
         <Portal>
           <Suspense fallback={<BrandTextLoading />}>{portal}</Suspense>
         </Portal>
-        <TopicPanel>{topic}</TopicPanel>
+        {/* TopicPanel removed and moved to Session sidebar */}
       </Flexbox>
     </>
   );

@@ -269,5 +269,9 @@
       }
     }
   },
-  "zenMode": "حالت تمرکز"
+  "zenMode": "حالت تمرکز",
+  "tab": {
+    "historyChat": "تاریخچه",
+    "assistantList": "دستیاران"
+  }
 }

@@ -269,5 +269,9 @@
       }
     }
   },
-  "zenMode": "集中モード"
+  "zenMode": "集中モード",
+  "tab": {
+    "historyChat": "履歴",
+    "assistantList": "アシスタント"
+  }
 }

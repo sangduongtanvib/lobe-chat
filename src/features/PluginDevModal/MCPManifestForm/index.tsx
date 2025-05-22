@@ -141,7 +141,10 @@ const MCPManifestForm = ({ form, isEditMode }: MCPManifestFormProps) => {
         ...(mcpType === 'http' ? [HTTP_URL_KEY] : [STDIO_COMMAND, STDIO_ARGS]),
       ]);
       isValid = true;
-    } catch {}
+    } catch (error) {
+      // Handle validation errors silently
+      console.error('Validation failed:', error);
+    }
 
     if (!isValid) {
       setIsTesting(false);

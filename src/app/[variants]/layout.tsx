@@ -81,7 +81,7 @@ export const generateStaticParams = () => {
   const themes: ThemeAppearance[] = ['dark', 'light'];
   const mobileOptions = isDesktop ? [false] : [true, false];
   // only static for serveral page, other go to dynamtic
-  const staticLocales: Locales[] = [DEFAULT_LANG, 'zh-CN'];
+  const staticLocales: Locales[] = [DEFAULT_LANG];
 
   const variants: { variants: string }[] = [];
 

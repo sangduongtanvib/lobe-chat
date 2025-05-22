@@ -42,9 +42,9 @@ const menuKey = (provider: string, model: string) => `${provider}-${model}`;
 
 const ModelSwitchPanel = memo<
   PropsWithChildren<{
-    onOpenChange?: (open: boolean) => void;
+    onOpenChange?: (_open: boolean) => void;
     open?: boolean;
-    setUpdating?: (updating: boolean) => void;
+    setUpdating?: (_updating: boolean) => void;
     updating?: boolean;
   }>
 >(({ children, setUpdating, onOpenChange, open }) => {

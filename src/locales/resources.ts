@@ -14,7 +14,6 @@ export const locales = [
   'pt-BR',
   'ru-RU',
   'tr-TR',
-  'zh-CN',
   'zh-TW',
   'vi-VN',
   'fa-IR',
@@ -30,7 +29,7 @@ export const normalizeLocale = (locale?: string): string => {
   if (locale.startsWith('ar')) return 'ar';
   if (locale.startsWith('fa')) return 'fa-IR';
 
-  if (locale.startsWith('cn')) return 'zh-CN';
+  if (locale.startsWith('cn') || locale.startsWith('zh')) return 'zh-TW';
 
   for (const l of locales) {
     if (l.startsWith(locale)) {
@@ -50,10 +49,6 @@ export const localeOptions: LocaleOptions = [
   {
     label: 'English',
     value: 'en-US',
-  },
-  {
-    label: '简体中文',
-    value: 'zh-CN',
   },
   {
     label: '繁體中文',

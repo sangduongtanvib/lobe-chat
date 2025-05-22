@@ -4,7 +4,6 @@ import { get } from 'lodash-es';
 
 import { DEFAULT_LANG } from '@/const/locale';
 import { Locales, NS, normalizeLocale } from '@/locales/resources';
-import { isDev } from '@/utils/env';
 
 export const getLocale = async (hl?: string): Promise<Locales> => {
   if (hl) return normalizeLocale(hl) as Locales;
@@ -15,7 +14,6 @@ export const translation = async (ns: NS = 'common', hl: string) => {
   let i18ns = {};
   const lng = await getLocale(hl);
   try {
-    if (isDev && lng === 'zh-CN') i18ns = await import(`@/locales/default/${ns}`);
     i18ns = await import(`@/../locales/${normalizeLocale(lng)}/${ns}.json`);
   } catch (e) {
     console.error('Error while reading translation file', e);

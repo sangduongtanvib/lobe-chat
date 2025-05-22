@@ -3,13 +3,13 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ThemeSwatchesNeutral = memo<{
-  onChange?: (v: NeutralColors) => void;
+  onChange?: (_v: NeutralColors) => void;
   value?: NeutralColors;
 }>(({ value, onChange }) => {
   const { t } = useTranslation('color');
 
-  const handleSelect = (v: any) => {
-    const name = findCustomThemeName('neutral', v) as NeutralColors;
+  const handleSelect = (_v: any) => {
+    const name = findCustomThemeName('neutral', _v) as NeutralColors;
     onChange?.(name || '');
   };
 

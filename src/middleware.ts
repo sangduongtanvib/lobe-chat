@@ -115,8 +115,8 @@ const defaultMiddleware = (request: NextRequest) => {
 
   // refs: https://github.com/lobehub/lobe-chat/pull/5866
   // new handle segment rewrite: /${route}${originalPathname}
-  // / -> /zh-CN__0__dark
-  // /discover -> /zh-CN__0__dark/discover
+  // / -> /en-US__0__dark
+  // /discover -> /en-US__0__dark/discover
   const nextPathname = `/${route}` + (url.pathname === '/' ? '' : url.pathname);
   const nextURL = appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL
     ? urlJoin(url.origin, nextPathname)

@@ -1,0 +1,11 @@
+.session-tabs {
+  height: 100%;
+}
+
+.session-tabs .ant-tabs-content {
+  height: 100%;
+}
+
+.session-tabs .ant-tabs-tabpane {
+  height: 100%;
+}

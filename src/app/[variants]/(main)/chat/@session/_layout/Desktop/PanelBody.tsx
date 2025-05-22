@@ -10,6 +10,7 @@ const useStyles = createStyles(
     flex-direction: column;
     gap: 2px;
 
+    height: 100%;
     padding-block: 8px 0;
     padding-inline: 8px;
   `,

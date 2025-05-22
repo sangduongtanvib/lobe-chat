@@ -269,5 +269,9 @@
       }
     }
   },
-  "zenMode": "집중 모드"
+  "zenMode": "집중 모드",
+  "tab": {
+    "historyChat": "기록",
+    "assistantList": "어시스턴트"
+  }
 }

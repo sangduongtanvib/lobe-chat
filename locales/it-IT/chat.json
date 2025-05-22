@@ -269,5 +269,9 @@
       }
     }
   },
-  "zenMode": "Modalità di concentrazione"
+  "zenMode": "Modalità di concentrazione",
+  "tab": {
+    "historyChat": "Cronologia",
+    "assistantList": "Assistenti"
+  }
 }

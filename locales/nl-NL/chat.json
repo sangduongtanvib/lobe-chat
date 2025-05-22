@@ -269,5 +269,9 @@
       }
     }
   },
-  "zenMode": "Focusmodus"
+  "zenMode": "Focusmodus",
+  "tab": {
+    "historyChat": "Geschiedenis",
+    "assistantList": "Assistenten"
+  }
 }

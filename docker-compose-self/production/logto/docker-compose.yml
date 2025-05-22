@@ -1,0 +1,71 @@
+name: lobe-chat-database
+services:
+  postgresql:
+    image: pgvector/pgvector:pg16
+    container_name: lobe-postgres
+    ports:
+      - '${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}'
+    volumes:
+      - './data:/var/lib/postgresql/data'
+    environment:
+      - 'POSTGRES_DB=lobe'
+      - 'POSTGRES_PASSWORD=uWNZugjBqixf8dxC'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  minio:
+    image: minio/minio
+    container_name: lobe-minio
+    ports:
+      - '${MINIO_PORT:-9000}:${MINIO_PORT:-9000}'
+      - '${MINIO_CONSOLE_PORT:-9001}:${MINIO_CONSOLE_PORT:-9001}'
+    volumes:
+      - './s3_data:/etc/minio/data'
+    environment:
+      - 'MINIO_ROOT_USER=YOUR_MINIO_USER'
+      - 'MINIO_ROOT_PASSWORD=YOUR_MINIO_PASSWORD'
+      - 'MINIO_DOMAIN=lobe-s3-api.example.com'
+      - 'MINIO_API_CORS_ALLOW_ORIGIN=https://lobe.example.com' # Your LobeChat's domain name.
+    restart: always
+    command: >
+      server /etc/minio/data --address ":${MINIO_PORT:-9000}" --console-address ":${MINIO_CONSOLE_PORT:-9001}"
+
+
+  logto:
+    image: svhd/logto
+    container_name: lobe-logto
+    ports:
+      - '${LOGTO_API_PORT:-3001}:${LOGTO_API_PORT:-3001}'
+      - '${LOGTO_ADMIN_PORT:-3002}:${LOGTO_ADMIN_PORT:-3002}'
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      - 'TRUST_PROXY_HEADER=1'
+      - 'DB_URL=postgresql://postgres:uWNZugjBqixf8dxC@postgresql:5432/logto'
+      - 'ENDPOINT=https://lobe-auth-api.example.com'
+      - 'ADMIN_ENDPOINT=https://lobe-auth-ui.example.com'
+    entrypoint: ['sh', '-c', 'npm run cli db seed -- --swe && npm start']
+
+  lobe:
+    image: lobehub/lobe-chat-database
+    container_name: lobe-chat
+    ports:
+      - '${LOBE_PORT:-3210}:${LOBE_PORT:-3210}'
+    depends_on:
+      - postgresql
+      - minio
+      - logto
+    env_file:
+      - .env
+    restart: always
+
+volumes:
+  data:
+    driver: local
+  s3_data:
+    driver: local

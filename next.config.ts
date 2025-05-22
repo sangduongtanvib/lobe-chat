@@ -245,6 +245,7 @@ const withPWA =
         register: false,
         swDest: 'public/sw.js',
         swSrc: 'src/app/sw.ts',
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB limit for files to cache
       })
     : noWrapper;
 
