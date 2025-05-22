@@ -486,7 +486,7 @@ FILES=(
     "$SUB_DIR/searxng-settings.yml"
 )
 ENV_EXAMPLES=(
-    "$SUB_DIR/.env.zh-CN.example"
+    "$SUB_DIR/.env.example"
     "$SUB_DIR/.env.example"
 )
 # Default values
@@ -549,7 +549,7 @@ section_download_files(){
         echo "Using existing .env file"
     else
         echo "Copying your custom .env file"
-        if [ "$LANGUAGE" = "zh_CN" ] && [ -f "$(dirname "$0")/.env.zh-CN.example" ]; then
+        if [ "$LANGUAGE" = "zh_CN" ] && [ -f "$(dirname "$0")/.env.example" ]; then
             cp "$(dirname "$0")/.env.example" "./.env"
         else
             cp "$(dirname "$0")/.env.example" "./.env"
