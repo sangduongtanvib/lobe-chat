@@ -35,9 +35,7 @@ services:
   minio:
     image: minio/minio
     container_name: lobe-minio
-    #network_mode: 'service:network-service'
-    networks:
-      - lobe-network
+    network_mode: 'service:network-service'
     volumes:
       - './s3_data:/etc/minio/data'
     environment:
@@ -65,9 +63,7 @@ services:
     image: casbin/casdoor:v1.843.0
     container_name: lobe-casdoor
     entrypoint: /bin/sh -c './server --createDatabase=true'
-    #network_mode: 'service:network-service'
-    networks:
-      - lobe-network
+    network_mode: 'service:network-service'
     depends_on:
       postgresql:
         condition: service_healthy
@@ -98,9 +94,7 @@ services:
   lobe:
     image: duongsang97/vib-chat
     container_name: lobe-chat
-    #network_mode: 'service:network-service'
-    networks:
-      - lobe-network
+    network_mode: 'service:network-service'
     depends_on:
       postgresql:
         condition: service_healthy
