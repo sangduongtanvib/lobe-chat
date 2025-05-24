@@ -589,6 +589,7 @@ section_configurate_host() {
         # Update URLs in .env
         $SED_COMMAND "s#^APP_URL=.*#APP_URL=$PROTOCOL://$LOBE_HOST#" .env
         $SED_COMMAND "s#^AUTH_URL=.*#AUTH_URL=$PROTOCOL://$LOBE_HOST/api/auth#" .env
+        $SED_COMMAND "s#^NEXTAUTH_URL=.*#NEXTAUTH_URL=$PROTOCOL://$LOBE_HOST#" .env
         $SED_COMMAND "s#^AUTH_CASDOOR_ISSUER=.*#AUTH_CASDOOR_ISSUER=$PROTOCOL://$CASDOOR_URL_HOST#" .env
         $SED_COMMAND "s#^origin=.*#origin=$PROTOCOL://$CASDOOR_URL_HOST#" .env
         $SED_COMMAND "s#^S3_PUBLIC_DOMAIN=.*#S3_PUBLIC_DOMAIN=$PROTOCOL://$MINIO_PUBLIC_URL_HOST#" .env
@@ -690,6 +691,7 @@ section_configurate_host() {
     $SED_COMMAND "s#^APP_URL=.*#APP_URL=$PROTOCOL://$LOBE_HOST#" .env
     # auth related
     $SED_COMMAND "s#^AUTH_URL=.*#AUTH_URL=$PROTOCOL://$LOBE_HOST/api/auth#" .env
+    $SED_COMMAND "s#^NEXTAUTH_URL=.*#NEXTAUTH_URL=$PROTOCOL://$LOBE_HOST#" .env
     $SED_COMMAND "s#^AUTH_CASDOOR_ISSUER=.*#AUTH_CASDOOR_ISSUER=$PROTOCOL://$CASDOOR_URL_HOST#" .env
     $SED_COMMAND "s#^origin=.*#origin=$PROTOCOL://$CASDOOR_URL_HOST#" .env
     # s3 related
