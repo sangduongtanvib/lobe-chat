@@ -3,7 +3,7 @@
 import { Icon } from '@lobehub/ui';
 import { TabBar, type TabBarProps } from '@lobehub/ui/mobile';
 import { createStyles } from 'antd-style';
-import { Compass, MessageSquare, User } from 'lucide-react';
+import { MessageSquare, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { rgba } from 'polished';
 import { memo, useMemo } from 'react';
@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { MOBILE_TABBAR_HEIGHT } from '@/const/layoutTokens';
 import { useActiveTabKey } from '@/hooks/useActiveTabKey';
 import { SidebarTabKey } from '@/store/global/initialState';
-import { featureFlagsSelectors, useServerConfigStore } from '@/store/serverConfig';
 
 const useStyles = createStyles(({ css, token }) => ({
   active: css`
@@ -33,8 +32,6 @@ const NavBar = memo(() => {
   const { styles } = useStyles();
   const activeKey = useActiveTabKey();
   const router = useRouter();
-
-  const { showMarket } = useServerConfigStore(featureFlagsSelectors);
 
   const items: TabBarProps['items'] = useMemo(
     () =>
