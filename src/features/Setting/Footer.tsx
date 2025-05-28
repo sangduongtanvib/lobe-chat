@@ -43,11 +43,13 @@ const Footer = memo<PropsWithChildren>(() => {
         >
           <div style={{ textAlign: 'center' }}>
             <Icon icon={MessageSquareHeart} /> {`${t('footer.title')} `}
+            {/* Link điều hướng đến GitHub repository https://github.com/lobehub/lobe-chat */}
             <Link
               aria-label={'star'}
               href={GITHUB}
               onClick={(e) => {
                 e.preventDefault();
+                // Hiển thị modal hướng dẫn trước khi chuyển hướng đến GitHub
                 setOpenStar(true);
               }}
             >
@@ -76,6 +78,7 @@ const Footer = memo<PropsWithChildren>(() => {
         onCancel={() => setOpenStar(false)}
         onOk={() => {
           if (isOnServerSide) return;
+          // Mở trang GitHub repository trong tab mới khi người dùng xác nhận từ modal
           window.open(GITHUB, '__blank');
         }}
         open={openStar}

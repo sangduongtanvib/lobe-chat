@@ -9,16 +9,18 @@ import { INBOX_SESSION_ID } from './session';
 
 export const UTM_SOURCE = 'chat_preview';
 
-export const OFFICIAL_URL = 'https://lobechat.com';
-export const OFFICIAL_PREVIEW_URL = 'https://chat-preview.lobehub.com';
-export const OFFICIAL_SITE = 'https://lobehub.com';
+export const OFFICIAL_URL = 'https://vib.com.vn';
+export const OFFICIAL_PREVIEW_URL = 'hhttps://vib.com.vn';
+export const OFFICIAL_SITE = 'https://vib.com.vn';
 
 export const OG_URL = '/og/cover.png?v=1';
 
+// URL đến GitHub repository của dự án (lấy từ trường homepage trong package.json)
 export const GITHUB = pkg.homepage;
+// URL đến trang tạo issue mới trên GitHub repository
 export const GITHUB_ISSUES = urlJoin(GITHUB, 'issues/new/choose');
-export const CHANGELOG = 'https://lobehub.com/changelog';
-export const DOCKER_IMAGE = 'https://hub.docker.com/r/lobehub/lobe-chat';
+export const CHANGELOG = 'https://vib.com.vn';
+export const DOCKER_IMAGE = 'https://vib.com.vn';
 
 export const DOCUMENTS = urlJoin(OFFICIAL_SITE, '/docs');
 export const USAGE_DOCUMENTS = urlJoin(DOCUMENTS, '/usage');
@@ -44,12 +46,12 @@ export const TERMS_URL = urlJoin(OFFICIAL_SITE, '/terms');
 export const PLUGINS_INDEX_URL = 'https://chat-plugins.lobehub.com';
 
 export const MORE_MODEL_PROVIDER_REQUEST_URL =
-  'https://github.com/lobehub/lobe-chat/discussions/6157';
+  'https://vib.com.vn';
 
 export const MORE_FILE_PREVIEW_REQUEST_URL =
-  'https://github.com/lobehub/lobe-chat/discussions/3684';
+  'https://vib.com.vn';
 
-export const AGENTS_INDEX_GITHUB = 'https://github.com/lobehub/lobe-chat-agents';
+export const AGENTS_INDEX_GITHUB = 'https://vib.com.vn';
 export const AGENTS_INDEX_GITHUB_ISSUE = urlJoin(AGENTS_INDEX_GITHUB, 'issues/new');
 
 export const SESSION_CHAT_URL = (id: string = INBOX_SESSION_ID, mobile?: boolean) =>
@@ -61,11 +63,11 @@ export const SESSION_CHAT_URL = (id: string = INBOX_SESSION_ID, mobile?: boolean
 export const imageUrl = (filename: string) => withBasePath(`/images/${filename}`);
 
 export const LOBE_URL_IMPORT_NAME = 'settings';
-export const EMAIL_SUPPORT = 'support@lobehub.com';
-export const EMAIL_BUSINESS = 'hello@lobehub.com';
+export const EMAIL_SUPPORT = 'sang.duongtan@vib.com.vn';
+export const EMAIL_BUSINESS = 'sang.duongtan@vib.com.vn';
 
-export const MEDIDUM = 'https://medium.com/@lobehub';
-export const X = 'https://x.com/lobehub';
+export const MEDIDUM = 'https://vib.com.vn';
+export const X = 'https://vib.com.vn';
 export const RELEASES_URL = urlJoin(GITHUB, 'releases');
 
 export const mailTo = (email: string) => `mailto:${email}`;

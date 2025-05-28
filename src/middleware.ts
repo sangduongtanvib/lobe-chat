@@ -134,11 +134,18 @@ const defaultMiddleware = (request: NextRequest) => {
   return NextResponse.rewrite(url, { status: 200 });
 };
 
+// Thay đổi isProtectedRoute để bảo vệ tất cả các routes, không chỉ các routes được liệt kê
 const isProtectedRoute = createRouteMatcher([
+  '/',
+  '/discover(.*)',
+  '/chat(.*)',
   '/settings(.*)',
   '/files(.*)',
   '/onboard(.*)',
   '/oauth(.*)',
+  '/changelog(.*)',
+  '/profile(.*)',
+  '/me(.*)',
   // ↓ cloud ↓
 ]);
 
@@ -176,15 +183,14 @@ const nextAuthMiddleware = NextAuthEdge.auth((req) => {
       response.headers.set(OIDC_SESSION_HEADER, session.user.id);
     }
   } else {
-    // If request a protected route, redirect to sign-in page
-    // ref: https://authjs.dev/getting-started/session-management/protecting
-    if (isProtected) {
-      logNextAuth('Request a protected route, redirecting to sign-in page');
+    // If not logged in, redirect to sign-in page for all routes except login pages
+    if (isProtected && !req.nextUrl.pathname.startsWith('/login') && !req.nextUrl.pathname.startsWith('/next-auth/signin')) {
+      logNextAuth('User not logged in, redirecting to sign-in page');
       const nextLoginUrl = new URL('/next-auth/signin', req.nextUrl.origin);
       nextLoginUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
       return Response.redirect(nextLoginUrl);
     }
-    logNextAuth('Request a free route but not login, allow visit without auth header');
+    logNextAuth('Request a free route or login page, allowing visit without auth header');
   }
 
   return response;
@@ -197,7 +203,8 @@ const clerkAuthMiddleware = clerkMiddleware(
     const isProtected = isProtectedRoute(req);
     logClerk('Route protection status: %s, %s', req.url, isProtected ? 'protected' : 'public');
 
-    if (isProtected) {
+    // Chỉ cho phép truy cập trang login và signup mà không cần xác thực
+    if (isProtected && !req.url.includes('/login') && !req.url.includes('/signup')) {
       logClerk('Protecting route: %s', req.url);
       await auth.protect();
     }

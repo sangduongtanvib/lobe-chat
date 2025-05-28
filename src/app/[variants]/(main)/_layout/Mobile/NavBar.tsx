@@ -49,16 +49,17 @@ const NavBar = memo(() => {
           },
           title: t('tab.chat'),
         },
-        showMarket && {
-          icon: (active: boolean) => (
-            <Icon className={active ? styles.active : undefined} icon={Compass} />
-          ),
-          key: SidebarTabKey.Discover,
-          onClick: () => {
-            router.push('/discover');
-          },
-          title: t('tab.discover'),
-        },
+        // Ẩn tab Discover (Khám phá) theo yêu cầu
+        // showMarket && {
+        //   icon: (active: boolean) => (
+        //     <Icon className={active ? styles.active : undefined} icon={Compass} />
+        //   ),
+        //   key: SidebarTabKey.Discover,
+        //   onClick: () => {
+        //     router.push('/discover');
+        //   },
+        //   title: t('tab.discover'),
+        // },
         {
           icon: (active: boolean) => (
             <Icon className={active ? styles.active : undefined} icon={User} />

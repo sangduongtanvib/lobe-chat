@@ -16,7 +16,7 @@ export default [
     extra: [
       {
         links: {
-          cn: 'https://github.com/lobehub/lobe-chat-agents/blob/main/README.zh-CN.md',
+          cn: 'https://vib.com.vn',
           en: 'https://github.com/lobehub/lobe-chat-agents',
         },
         titles: {
