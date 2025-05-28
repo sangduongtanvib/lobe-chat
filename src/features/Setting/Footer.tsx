@@ -42,9 +42,9 @@ const Footer = memo<PropsWithChildren>(() => {
           width={'100%'}
         >
           <div style={{ textAlign: 'center' }}>
-            <Icon icon={MessageSquareHeart} /> {`${t('footer.title')} `}
+            {/* <Icon icon={MessageSquareHeart} /> */}
             {/* Link điều hướng đến GitHub repository https://github.com/lobehub/lobe-chat */}
-            <Link
+            {/* <Link
               aria-label={'star'}
               href={GITHUB}
               onClick={(e) => {
@@ -54,9 +54,9 @@ const Footer = memo<PropsWithChildren>(() => {
               }}
             >
               {t('footer.action.star')}
-            </Link>
-            {` ${t('footer.and')} `}
-            <Link
+            </Link> */}
+            {/* {` ${t('footer.and')} `} */}
+            {/* <Link
               aria-label={'feedback'}
               href={GITHUB_ISSUES}
               onClick={(e) => {
@@ -66,7 +66,7 @@ const Footer = memo<PropsWithChildren>(() => {
             >
               {t('footer.action.feedback')}
             </Link>
-            {' !'}
+            {' !'} */}
           </div>
         </Center>
       </Flexbox>
