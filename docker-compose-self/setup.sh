@@ -585,7 +585,7 @@ section_configurate_host() {
         $SED_COMMAND "s#^MINIO_CONSOLE_PORT=.*#MINIO_CONSOLE_PORT=${MINIO_CONSOLE_PORT_INPUT}#" .env
         $SED_COMMAND "s#^CASDOOR_PORT=.*#CASDOOR_PORT=${CASDOOR_PORT_INPUT}#" .env
         # Setup callback url for Casdoor
-        $SED_COMMAND "s#\"localhost:3210\"#\"${LOBE_HOST}\"#" init_data.json
+        $SED_COMMAND "s#\":3210\"#\"${LOBE_HOST}\"#" init_data.json
         # Update URLs in .env
         $SED_COMMAND "s#^APP_URL=.*#APP_URL=$PROTOCOL://$LOBE_HOST#" .env
         $SED_COMMAND "s#^AUTH_URL=.*#AUTH_URL=$PROTOCOL://$LOBE_HOST/api/auth#" .env
@@ -671,7 +671,7 @@ section_configurate_host() {
             MINIO_PUBLIC_URL_HOST="${HOST}:${MINIO_API_PORT_INPUT}" # For S3_PUBLIC_DOMAIN, can be different if behind reverse proxy
             CASDOOR_URL_HOST="${HOST}:${CASDOOR_PORT_INPUT}"
             # Setup callback url for Casdoor
-            $SED_COMMAND "s#\"localhost:3210\"#\"${LOBE_HOST}\"#" init_data.json
+            $SED_COMMAND "s#\":3210\"#\"${LOBE_HOST}\"#" init_data.json
             # Update .env with new ports
             $SED_COMMAND "s#^LOBE_PORT=.*#LOBE_PORT=${LOBE_CHAT_PORT_INPUT}#" .env
             $SED_COMMAND "s#^MINIO_PORT=.*#MINIO_PORT=${MINIO_API_PORT_INPUT}#" .env
