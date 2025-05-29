@@ -543,6 +543,20 @@ ask() {
     ask_result=$(echo "$result" | xargs)
 }
 
+# Helper function to safely append to .env file
+safe_append_env() {
+    local key="$1"
+    local value="$2"
+    # Ensure file ends with newline before appending
+    if [ -f .env ]; then
+        # Check if last character is not newline, add one
+        if [ -s .env ] && [ "$(tail -c 1 .env | wc -l)" -eq 0 ]; then
+            echo "" >> .env
+        fi
+    fi
+    echo "${key}=${value}" >> .env
+}
+
 ####################
 ## Main Process ##
 ####################
@@ -665,6 +679,8 @@ section_configurate_host() {
         $SED_COMMAND "s#^NEXTAUTH_URL=.*#NEXTAUTH_URL=$PROTOCOL://$LOBE_HOST#" .env
         $SED_COMMAND "s#^AUTH_CASDOOR_ISSUER=.*#AUTH_CASDOOR_ISSUER=$PROTOCOL://$CASDOOR_URL_HOST#" .env
         $SED_COMMAND "s#^origin=.*#origin=$PROTOCOL://$CASDOOR_URL_HOST#" .env
+        # Ensure file ends with newline after origin replacement
+        sed -i -e '$a\' .env 2>/dev/null || true
         $SED_COMMAND "s#^S3_PUBLIC_DOMAIN=.*#S3_PUBLIC_DOMAIN=$PROTOCOL://$MINIO_PUBLIC_URL_HOST#" .env
         $SED_COMMAND "s#^S3_ENDPOINT=.*#S3_ENDPOINT=$PROTOCOL://$MINIO_API_URL_HOST#" .env
         return 0
@@ -776,6 +792,8 @@ section_configurate_host() {
     $SED_COMMAND "s#^NEXTAUTH_URL=.*#NEXTAUTH_URL=$PROTOCOL://$LOBE_HOST#" .env
     $SED_COMMAND "s#^AUTH_CASDOOR_ISSUER=.*#AUTH_CASDOOR_ISSUER=$PROTOCOL://$CASDOOR_URL_HOST#" .env
     $SED_COMMAND "s#^origin=.*#origin=$PROTOCOL://$CASDOOR_URL_HOST#" .env
+    # Ensure file ends with newline after origin replacement
+    sed -i -e '$a\' .env 2>/dev/null || true
     # s3 related
     $SED_COMMAND "s#^S3_PUBLIC_DOMAIN=.*#S3_PUBLIC_DOMAIN=$PROTOCOL://$MINIO_PUBLIC_URL_HOST#" .env
     $SED_COMMAND "s#^S3_ENDPOINT=.*#S3_ENDPOINT=$PROTOCOL://$MINIO_API_URL_HOST#" .env
@@ -886,7 +904,7 @@ section_configure_api_keys() {
     ask "AZURE_API_KEY" ""
     if [ -n "$ask_result" ]; then
         $SED_COMMAND "/^# AZURE_API_KEY=/d" .env
-        echo "AZURE_API_KEY=$ask_result" >> .env
+        safe_append_env "AZURE_API_KEY" "$ask_result"
     fi
     
     # Azure Endpoint
@@ -894,7 +912,7 @@ section_configure_api_keys() {
     ask "AZURE_ENDPOINT" ""
     if [ -n "$ask_result" ]; then
         $SED_COMMAND "/^# AZURE_ENDPOINT=/d" .env
-        echo "AZURE_ENDPOINT=$ask_result" >> .env
+        safe_append_env "AZURE_ENDPOINT" "$ask_result"
     fi
     
     # AWS Access Key ID
@@ -902,7 +920,7 @@ section_configure_api_keys() {
     ask "AWS_ACCESS_KEY_ID" ""
     if [ -n "$ask_result" ]; then
         $SED_COMMAND "/^# AWS_ACCESS_KEY_ID=/d" .env
-        echo "AWS_ACCESS_KEY_ID=$ask_result" >> .env
+        safe_append_env "AWS_ACCESS_KEY_ID" "$ask_result"
     fi
     
     # AWS Secret Access Key
@@ -910,7 +928,7 @@ section_configure_api_keys() {
     ask "AWS_SECRET_ACCESS_KEY" ""
     if [ -n "$ask_result" ]; then
         $SED_COMMAND "/^# AWS_SECRET_ACCESS_KEY=/d" .env
-        echo "AWS_SECRET_ACCESS_KEY=$ask_result" >> .env
+        safe_append_env "AWS_SECRET_ACCESS_KEY" "$ask_result"
     fi
     
     show_message "api_keys_completed"
@@ -939,7 +957,7 @@ section_configure_api_keys() {
     ask "AZURE_API_KEY" ""
     if [ -n "$ask_result" ]; then
         $SED_COMMAND "/^# AZURE_API_KEY=/d" .env
-        echo "AZURE_API_KEY=$ask_result" >> .env
+        safe_append_env "AZURE_API_KEY" "$ask_result"
     fi
     
     # Azure Endpoint
@@ -947,7 +965,7 @@ section_configure_api_keys() {
     ask "AZURE_ENDPOINT" ""
     if [ -n "$ask_result" ]; then
         $SED_COMMAND "/^# AZURE_ENDPOINT=/d" .env
-        echo "AZURE_ENDPOINT=$ask_result" >> .env
+        safe_append_env "AZURE_ENDPOINT" "$ask_result"
     fi
     
     # AWS Access Key ID
@@ -955,7 +973,7 @@ section_configure_api_keys() {
     ask "AWS_ACCESS_KEY_ID" ""
     if [ -n "$ask_result" ]; then
         $SED_COMMAND "/^# AWS_ACCESS_KEY_ID=/d" .env
-        echo "AWS_ACCESS_KEY_ID=$ask_result" >> .env
+        safe_append_env "AWS_ACCESS_KEY_ID" "$ask_result"
     fi
     
     # AWS Secret Access Key
@@ -963,7 +981,7 @@ section_configure_api_keys() {
     ask "AWS_SECRET_ACCESS_KEY" ""
     if [ -n "$ask_result" ]; then
         $SED_COMMAND "/^# AWS_SECRET_ACCESS_KEY=/d" .env
-        echo "AWS_SECRET_ACCESS_KEY=$ask_result" >> .env
+        safe_append_env "AWS_SECRET_ACCESS_KEY" "$ask_result"
     fi
     
     show_message "api_keys_completed"
