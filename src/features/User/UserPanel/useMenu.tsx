@@ -1,18 +1,12 @@
 import { Hotkey, Icon } from '@lobehub/ui';
-import { DiscordIcon } from '@lobehub/ui/icons';
 import { Badge } from 'antd';
 import { ItemType } from 'antd/es/menu/interface';
 import {
-  Book,
   CircleUserRound,
   Cloudy,
   Download,
-  Feather,
-  FileClockIcon,
   HardDriveDownload,
-  LifeBuoy,
   LogOut,
-  Mail,
   Settings2,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -25,14 +19,8 @@ import { enableAuth } from '@/const/auth';
 import { LOBE_CHAT_CLOUD } from '@/const/branding';
 import { DEFAULT_HOTKEY_CONFIG } from '@/const/settings';
 import {
-  CHANGELOG,
-  DISCORD,
-  DOCUMENTS_REFER_URL,
-  EMAIL_SUPPORT,
-  GITHUB_ISSUES,
   OFFICIAL_URL,
   UTM_SOURCE,
-  mailTo,
 } from '@/const/url';
 import { isDesktop } from '@/const/version';
 import DataImporter from '@/features/DataImporter';
