@@ -112,9 +112,9 @@ export default memo(() => {
           {/* Header */}
           <div className={styles.text}>
             <Title className={styles.title} level={4}>
-              <div>
+              {/* <div>
                 <LobeChat size={48} />
-              </div>
+              </div> */}
               {t('signIn.start.title', { applicationName: 'VIB CHAT' })}
             </Title>
             <Paragraph className={styles.description}>{t('signIn.start.subtitle')}</Paragraph>
