@@ -183,15 +183,15 @@ describe('ChangelogService', () => {
       } as ChangelogIndexItem);
 
       const mockResponse = {
-        text: vi.fn().mockResolvedValue('# Chinese Title\n中文内容'),
+        text: vi.fn().mockResolvedValue('# Vietnamese Title\nVietnamese content'),
       };
       (global.fetch as any).mockResolvedValue(mockResponse);
 
-      const result = await service.getPostById('post1', { locale: 'zh-CN' });
+      const result = await service.getPostById('post1', { locale: 'vi-VN' });
       expect(result).toEqual({
-        content: '中文内容',
+        content: 'Vietnamese content',
         date: '2023-01-01',
-        description: '中文内容',
+        description: 'Vietnamese content',
         image: undefined,
         rawTitle: 'Chinese Title',
         tags: ['changelog'],

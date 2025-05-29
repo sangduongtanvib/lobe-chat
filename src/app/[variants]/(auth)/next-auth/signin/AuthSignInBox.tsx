@@ -115,7 +115,7 @@ export default memo(() => {
               <div>
                 <LobeChat size={48} />
               </div>
-              {t('signIn.start.title', { applicationName: 'LobeChat' })}
+              {t('signIn.start.title', { applicationName: 'VIB CHAT' })}
             </Title>
             <Paragraph className={styles.description}>{t('signIn.start.subtitle')}</Paragraph>
           </div>

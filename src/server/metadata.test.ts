@@ -40,7 +40,7 @@ describe('Metadata', () => {
         url: 'https://example.com/custom',
         type: 'article',
         tags: ['tag1', 'tag2'],
-        locale: 'fr-FR',
+        locale: 'vi-VN',
         alternate: true,
       });
 

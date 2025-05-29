@@ -16,8 +16,9 @@ export const DEFAULT_LLM_CONFIG = genUserLLMConfig({
 
 export const DEFAULT_MODEL = 'gpt-4.1-mini';
 
-export const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
-export const DEFAULT_EMBEDDING_PROVIDER = ModelProvider.OpenAI;
+// Use Azure OpenAI for embedding
+export const DEFAULT_EMBEDDING_MODEL = 'text-embedding-ada-002'; // Your deployment name from Azure
+export const DEFAULT_EMBEDDING_PROVIDER = ModelProvider.Azure; // Changed to Azure
 
 export const DEFAULT_RERANK_MODEL = 'rerank-english-v3.0';
 export const DEFAULT_RERANK_PROVIDER = 'cohere';
