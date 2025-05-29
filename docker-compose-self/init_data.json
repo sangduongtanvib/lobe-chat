@@ -241,8 +241,8 @@
       "clientId": "a387a4892ee19b1a2249",
       "clientSecret": "dbf205949d704de81b0b5b3603174e23fbecc354",
       "redirectUris": [
-        "http://10.92.126.223:3210/api/auth/callback/casdoor",
-        "https://10.92.126.223:3210/api/auth/callback/casdoor",
+        "http://:3210/api/auth/callback/casdoor",
+        "https://:3210/api/auth/callback/casdoor",
         "http://example.com/api/auth/callback/casdoor",
         "https://example.com/api/auth/callback/casdoor"
       ],
