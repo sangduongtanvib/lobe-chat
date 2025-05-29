@@ -404,6 +404,78 @@ show_message() {
                 ;;
             esac
         ;;
+        ask_configure_api_keys)
+            case $LANGUAGE in
+                zh_CN)
+                    echo "是否要配置 API 密钥？（Azure、AWS 等）"
+                ;;
+                *)
+                    echo "Do you want to configure API keys? (Azure, AWS, etc.)"
+                ;;
+            esac
+        ;;
+        api_keys_intro)
+            case $LANGUAGE in
+                zh_CN)
+                    echo "配置 API 密钥（为了安全起见，这些密钥不会保存在配置文件中）"
+                    echo "请输入以下 API 密钥（可选，留空则跳过）："
+                ;;
+                *)
+                    echo "Configure API Keys (For security reasons, these keys will not be saved in config files)"
+                    echo "Please enter the following API keys (optional, leave blank to skip):"
+                ;;
+            esac
+        ;;
+        ask_azure_api_key)
+            case $LANGUAGE in
+                zh_CN)
+                    echo "Azure API 密钥："
+                ;;
+                *)
+                    echo "Azure API Key:"
+                ;;
+            esac
+        ;;
+        ask_azure_endpoint)
+            case $LANGUAGE in
+                zh_CN)
+                    echo "Azure 端点："
+                ;;
+                *)
+                    echo "Azure Endpoint:"
+                ;;
+            esac
+        ;;
+        ask_aws_access_key)
+            case $LANGUAGE in
+                zh_CN)
+                    echo "AWS 访问密钥 ID："
+                ;;
+                *)
+                    echo "AWS Access Key ID:"
+                ;;
+            esac
+        ;;
+        ask_aws_secret_key)
+            case $LANGUAGE in
+                zh_CN)
+                    echo "AWS 秘密访问密钥："
+                ;;
+                *)
+                    echo "AWS Secret Access Key:"
+                ;;
+            esac
+        ;;
+        api_keys_completed)
+            case $LANGUAGE in
+                zh_CN)
+                    echo "✔️ API 密钥配置完成"
+                ;;
+                *)
+                    echo "✔️ API keys configuration completed"
+                ;;
+            esac
+        ;;
     esac
 }
 
@@ -618,7 +690,14 @@ section_configurate_host() {
     
     # If user not specify host, try to get the server ip
     if [ -z "$HOST" ]; then
-        HOST=$(hostname -I | awk '{print $1}')
+        # Different commands for different OS
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            HOST=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -n1)
+        else
+            # Linux
+            HOST=$(hostname -I | awk '{print $1}')
+        fi
         # If the host is a private ip and the deploy mode is port mode
         if [[ "$DEPLOY_MODE" == "1" ]] && ([[ "$HOST" == "192.168."* ]] || [[ "$HOST" == "172."* ]] || [[ "$HOST" == "10."* ]]); then
             echo $(show_message "tips_private_ip_detected")
@@ -796,11 +875,99 @@ section_regenerate_secrets() {
     fi
 }
 
+# ==========================
+# === Configure API Keys ===
+# ==========================
+section_configure_api_keys() {
+    show_message "api_keys_intro"
+    
+    # Azure API Key
+    show_message "ask_azure_api_key"
+    ask "AZURE_API_KEY" ""
+    if [ -n "$ask_result" ]; then
+        $SED_COMMAND "/^# AZURE_API_KEY=/d" .env
+        echo "AZURE_API_KEY=$ask_result" >> .env
+    fi
+    
+    # Azure Endpoint
+    show_message "ask_azure_endpoint"
+    ask "AZURE_ENDPOINT" ""
+    if [ -n "$ask_result" ]; then
+        $SED_COMMAND "/^# AZURE_ENDPOINT=/d" .env
+        echo "AZURE_ENDPOINT=$ask_result" >> .env
+    fi
+    
+    # AWS Access Key ID
+    show_message "ask_aws_access_key"
+    ask "AWS_ACCESS_KEY_ID" ""
+    if [ -n "$ask_result" ]; then
+        $SED_COMMAND "/^# AWS_ACCESS_KEY_ID=/d" .env
+        echo "AWS_ACCESS_KEY_ID=$ask_result" >> .env
+    fi
+    
+    # AWS Secret Access Key
+    show_message "ask_aws_secret_key"
+    ask "AWS_SECRET_ACCESS_KEY" ""
+    if [ -n "$ask_result" ]; then
+        $SED_COMMAND "/^# AWS_SECRET_ACCESS_KEY=/d" .env
+        echo "AWS_SECRET_ACCESS_KEY=$ask_result" >> .env
+    fi
+    
+    show_message "api_keys_completed"
+}
+
+show_message "ask_configure_api_keys"
+ask "(y/n)" "y"
+if [[ "$ask_result" == "y" ]]; then
+    section_configure_api_keys
+fi
+
 show_message "ask_regenerate_secrets"
 ask "(y/n)" "y"
 if [[ "$ask_result" == "y" ]]; then
     section_regenerate_secrets
 fi
+
+# ==========================
+# === Configure API Keys ===
+# ==========================
+section_configure_api_keys() {
+    show_message "api_keys_intro"
+    
+    # Azure API Key
+    show_message "ask_azure_api_key"
+    ask "AZURE_API_KEY" ""
+    if [ -n "$ask_result" ]; then
+        $SED_COMMAND "/^# AZURE_API_KEY=/d" .env
+        echo "AZURE_API_KEY=$ask_result" >> .env
+    fi
+    
+    # Azure Endpoint
+    show_message "ask_azure_endpoint"
+    ask "AZURE_ENDPOINT" ""
+    if [ -n "$ask_result" ]; then
+        $SED_COMMAND "/^# AZURE_ENDPOINT=/d" .env
+        echo "AZURE_ENDPOINT=$ask_result" >> .env
+    fi
+    
+    # AWS Access Key ID
+    show_message "ask_aws_access_key"
+    ask "AWS_ACCESS_KEY_ID" ""
+    if [ -n "$ask_result" ]; then
+        $SED_COMMAND "/^# AWS_ACCESS_KEY_ID=/d" .env
+        echo "AWS_ACCESS_KEY_ID=$ask_result" >> .env
+    fi
+    
+    # AWS Secret Access Key
+    show_message "ask_aws_secret_key"
+    ask "AWS_SECRET_ACCESS_KEY" ""
+    if [ -n "$ask_result" ]; then
+        $SED_COMMAND "/^# AWS_SECRET_ACCESS_KEY=/d" .env
+        echo "AWS_SECRET_ACCESS_KEY=$ask_result" >> .env
+    fi
+    
+    show_message "api_keys_completed"
+}
 
 section_init_database() {
     if ! command -v docker &> /dev/null ; then
@@ -851,6 +1018,22 @@ section_display_configurated_report() {
     echo -e "LobeChat: \\n  - URL: $PROTOCOL://$LOBE_HOST \\n  - Username: user \\n  - Password: ${CASDOOR_PASSWORD} "
     echo -e "Casdoor: \\n  - URL: $PROTOCOL://$CASDOOR_URL_HOST \\n  - Username: admin \\n  - Password: ${CASDOOR_PASSWORD}\\n"
     echo -e "Minio: \\n  - API URL: $PROTOCOL://$MINIO_API_URL_HOST \\n  - Console URL: $PROTOCOL://${HOST}:${MINIO_CONSOLE_PORT_INPUT} \\n  - Username: admin\\n  - Password: ${MINIO_ROOT_PASSWORD}\\n"
+    
+    # Display configured API keys (without showing actual values for security)
+    echo "Configured API Keys:"
+    if grep -q "^AZURE_API_KEY=" .env 2>/dev/null; then
+        echo "  ✔️ Azure API Key: Configured"
+    fi
+    if grep -q "^AZURE_ENDPOINT=" .env 2>/dev/null; then
+        echo "  ✔️ Azure Endpoint: Configured"
+    fi
+    if grep -q "^AWS_ACCESS_KEY_ID=" .env 2>/dev/null; then
+        echo "  ✔️ AWS Access Key ID: Configured"
+    fi
+    if grep -q "^AWS_SECRET_ACCESS_KEY=" .env 2>/dev/null; then
+        echo "  ✔️ AWS Secret Access Key: Configured"
+    fi
+    echo ""
     
     # if user run in domain mode, diplay reverse proxy configuration
     if [[ "$DEPLOY_MODE" == "domain" ]]; then

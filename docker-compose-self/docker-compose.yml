@@ -118,6 +118,17 @@ services:
       - 'LLM_VISION_IMAGE_USE_BASE64=1'
       - 'S3_SET_ACL=0'
       - 'SEARXNG_URL=http://searxng:8080'
+      # Azure AI configuration - loaded from .env
+      - 'AZURE_API_KEY=${AZURE_API_KEY}'
+      - 'AZURE_API_VERSION=${AZURE_API_VERSION}'
+      - 'AZURE_ENDPOINT=${AZURE_ENDPOINT}'
+      - 'AZURE_MODEL_LIST=${AZURE_MODEL_LIST}'
+      # Azure AI Embedding Model configuration
+      - 'DEFAULT_FILES_CONFIG=embedding_model=azure/text-embedding-ada-002,query_mode=full_text'
+      - 'AWS_REGION=${AWS_REGION}'
+      - 'AWS_MODEL_LIST=${AWS_MODEL_LIST}'
+      # Feature flags configuration
+      - 'FEATURE_FLAGS=${FEATURE_FLAGS}'
       # Pass the LOBE_PORT to the container to be used by startServer.js if needed
       - 'PORT=${LOBE_PORT}'
     env_file:
