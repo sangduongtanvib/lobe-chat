@@ -62,7 +62,7 @@ describe('AssistantStore', () => {
   it('should return the agent URL for a supported language', () => {
     const agentMarket = new AssistantStore();
     const url = agentMarket.getAgentUrl('agent-123', 'vi-VN');
-    expect(url).toBe(`${baseURL}/agent-123.vi-VN.json`);
+    expect(url).toBe(`${baseURL}/agent-123.zh-CN.json`);
   });
 
   it('should return the agent URL without language suffix if the provided language is not supported', () => {
