@@ -1,31 +1,32 @@
 'use client';
 
-import { PropsWithChildren } from 'react';
 import { Tabs } from 'antd';
 import { createStyles } from 'antd-style';
+import { PropsWithChildren } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import MobileContentLayout from '@/components/server/MobileNavLayout';
 
 import SessionSearchBar from '../../features/SessionSearchBar';
-import SessionHeader from './SessionHeader';
 import TopicListContainer from '../Desktop/TopicListContainer';
+import SessionHeader from './SessionHeader';
 
 const useStyles = createStyles(({ css }) => ({
   tabsContainer: css`
     display: flex;
     flex-direction: column;
     height: calc(100% - 56px);
-    
+
     .ant-tabs {
       display: flex;
       flex: 1;
       flex-direction: column;
     }
-    
+
     .ant-tabs-content {
       height: 100%;
     }
-    
+
     .ant-tabs-tabpane {
       height: 100%;
     }
@@ -34,8 +35,8 @@ const useStyles = createStyles(({ css }) => ({
 
 const MobileLayout = ({ children }: PropsWithChildren) => {
   const { styles } = useStyles();
-  // Uncomment this when translation is needed
-  // const { t } = useTranslation(['chat', 'topic']);
+  // Use translation for tab labels
+  const { t } = useTranslation('chat');
 
   return (
     <MobileContentLayout header={<SessionHeader />} withNav>
@@ -49,12 +50,12 @@ const MobileLayout = ({ children }: PropsWithChildren) => {
             {
               children: <TopicListContainer />,
               key: 'topics',
-              label: 'History',
+              label: t('tab.historyChat' as any),
             },
             {
               children: children,
               key: 'assistants',
-              label: 'Assistants',
+              label: t('tab.assistantList' as any),
             },
           ]}
           size="small"

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2022-09-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "outputs": {
+    "containerAppFQDN": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('containerAppName'))).configuration.ingress.fqdn]"
+    }
+  },
+  "parameters": {
+    "containerAppName": {
+      "type": "string",
+      "defaultValue": "lobechat-app"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "azureApiKey": {
+      "type": "securestring"
+    },
+    "azureEndpoint": {
+      "type": "string"
+    },
+    "containerImage": {
+      "type": "string",
+      "defaultValue": "your-registry/lobechat:latest"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('containerAppEnvironmentName')]",
+      "location": "[parameters('location')]",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('containerAppName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', variables('containerAppEnvironmentName'))]"
+      ],
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', variables('containerAppEnvironmentName'))]",
+        "configuration": {
+          "secrets": [
+            {
+              "name": "azure-api-key",
+              "value": "[parameters('azureApiKey')]"
+            }
+          ],
+          "ingress": {
+            "external": true,
+            "targetPort": 3210,
+            "allowInsecure": false
+          }
+        },
+        "template": {
+          "containers": [
+            {
+              "name": "lobechat",
+              "image": "[parameters('containerImage')]",
+              "env": [
+                {
+                  "name": "AZURE_API_KEY",
+                  "secretRef": "azure-api-key"
+                },
+                {
+                  "name": "AZURE_ENDPOINT",
+                  "value": "[parameters('azureEndpoint')]"
+                },
+                {
+                  "name": "AZURE_CONTAINER_URL",
+                  "value": "[concat('https://', parameters('containerAppName'), '.', parameters('location'), '.azurecontainerapps.io')]"
+                }
+              ],
+              "resources": {
+                "cpu": 1.0,
+                "memory": "2Gi"
+              }
+            }
+          ],
+          "scale": {
+            "minReplicas": 1,
+            "maxReplicas": 3
+          }
+        }
+      }
+    }
+  ],
+  "variables": {
+    "containerAppEnvironmentName": "[concat(parameters('containerAppName'), '-env')]"
+  }
+}

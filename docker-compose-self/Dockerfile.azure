@@ -1,0 +1,27 @@
+FROM alpine:latest
+
+# Install required packages
+RUN apk add --no-cache \
+    docker \
+    docker-compose \
+    bash \
+    openssl \
+    curl
+
+# Set working directory
+WORKDIR /app
+
+# Copy docker-compose files and configurations
+COPY docker-compose.yml .
+COPY .env.azure .
+COPY azure-init.sh .
+COPY init_data.json .
+
+# Make scripts executable
+RUN chmod +x azure-init.sh
+
+# Expose ports
+EXPOSE 3210 8000 9000 9001 5432
+
+# Initialize and start services
+CMD ["sh", "-c", "./azure-init.sh && docker-compose up -d && tail -f /dev/null"]
