@@ -94,7 +94,7 @@ describe('generalActionSlice', () => {
   describe('switchLocale', () => {
     it('should update language in system status and call switchLang', () => {
       const { result } = renderHook(() => useGlobalStore());
-      const locale = 'zh-CN';
+      const locale = 'vi-VN';
 
       act(() => {
         useGlobalStore.setState({ isStatusInit: true });
@@ -107,7 +107,7 @@ describe('generalActionSlice', () => {
 
     it('should not update language if status is not initialized', () => {
       const { result } = renderHook(() => useGlobalStore());
-      const locale = 'zh-CN';
+      const locale = 'vi-VN';
 
       act(() => {
         result.current.switchLocale(locale);
