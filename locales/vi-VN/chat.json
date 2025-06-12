@@ -43,9 +43,6 @@
     "reasoningBudgetToken": {
       "title": "Token tiêu tốn cho tư duy"
     },
-    "reasoningEffort": {
-      "title": "Cường độ suy luận"
-    },
     "title": "Chức năng mở rộng mô hình"
   },
   "history": {
@@ -55,7 +52,7 @@
   "historySummary": "Tóm tắt tin tức lịch sử",
   "inbox": {
     "desc": "Kích hoạt cụm não, khơi dậy tia lửa tư duy. Trợ lý thông minh của bạn, ở đây để trò chuyện với bạn về mọi thứ.",
-    "title": "Chuyện phiếm"
+    "title": "Trò chuyện"
   },
   "input": {
     "addAi": "Thêm một tin nhắn AI",
@@ -216,6 +213,10 @@
     "loading": "Đang nhận dạng...",
     "prettifying": "Đang tinh chỉnh..."
   },
+  "tab": {
+    "historyChat": "Lịch sử",
+    "assistantList": "D.S trợ lý"
+  },
   "thread": {
     "divider": "Chủ đề con",
     "threadMessageCount": "{{messageCount}} tin nhắn",
@@ -237,9 +238,9 @@
     "used": "Đã sử dụng"
   },
   "topic": {
-    "checkOpenNewTopic": "Có muốn mở chủ đề mới không?",
+    "checkOpenNewTopic": "Có muốn tạo một cuộc trò chuyện mới không?",
     "checkSaveCurrentMessages": "Bạn có muốn lưu cuộc trò chuyện hiện tại thành chủ đề không?",
-    "openNewTopic": "Mở chủ đề mới",
+    "openNewTopic": "Tạo cuộc trò chuyện mới",
     "saveCurrentMessages": "Lưu cuộc trò chuyện hiện tại thành chủ đề"
   },
   "translate": {

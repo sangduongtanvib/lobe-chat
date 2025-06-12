@@ -11,14 +11,18 @@ import { ProductLogo } from '@/components/Branding';
 import { MOBILE_HEADER_ICON_SIZE } from '@/const/layoutTokens';
 import SyncStatusInspector from '@/features/SyncStatusInspector';
 import UserAvatar from '@/features/User/UserAvatar';
+import { useActionSWR } from '@/libs/swr';
+import { useChatStore } from '@/store/chat';
 import { featureFlagsSelectors, useServerConfigStore } from '@/store/serverConfig';
-import { useSessionStore } from '@/store/session';
 import { mobileHeaderSticky } from '@/styles/mobileHeader';
 
 const Header = memo(() => {
-  const [createSession] = useSessionStore((s) => [s.createSession]);
   const router = useRouter();
   const { enableWebrtc, showCreateSession } = useServerConfigStore(featureFlagsSelectors);
+
+  const openNewTopicOrSaveTopic = useChatStore((s) => s.openNewTopicOrSaveTopic);
+
+  const { mutate, isValidating } = useActionSWR('openNewTopicOrSaveTopic', openNewTopicOrSaveTopic);
 
   return (
     <ChatHeader
@@ -33,7 +37,8 @@ const Header = memo(() => {
         showCreateSession && (
           <ActionIcon
             icon={MessageSquarePlus}
-            onClick={() => createSession()}
+            loading={isValidating}
+            onClick={() => mutate()}
             size={MOBILE_HEADER_ICON_SIZE}
           />
         )

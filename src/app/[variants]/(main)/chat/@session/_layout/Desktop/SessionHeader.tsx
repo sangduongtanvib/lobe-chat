@@ -11,8 +11,8 @@ import { ProductLogo } from '@/components/Branding';
 import { DESKTOP_HEADER_ICON_SIZE } from '@/const/layoutTokens';
 import SyncStatusTag from '@/features/SyncStatusInspector';
 import { useActionSWR } from '@/libs/swr';
+import { useChatStore } from '@/store/chat';
 import { featureFlagsSelectors, useServerConfigStore } from '@/store/serverConfig';
-import { useSessionStore } from '@/store/session';
 
 import TogglePanelButton from '../../../features/TogglePanelButton';
 import SessionSearchBar from '../../features/SessionSearchBar';
@@ -32,10 +32,11 @@ export const useStyles = createStyles(({ css, token }) => ({
 const Header = memo(() => {
   const { styles } = useStyles();
   const { t } = useTranslation('chat');
-  const [createSession] = useSessionStore((s) => [s.createSession]);
   const { enableWebrtc, showCreateSession } = useServerConfigStore(featureFlagsSelectors);
 
-  const { mutate, isValidating } = useActionSWR('session.createSession', () => createSession());
+  const openNewTopicOrSaveTopic = useChatStore((s) => s.openNewTopicOrSaveTopic);
+
+  const { mutate, isValidating } = useActionSWR('openNewTopicOrSaveTopic', openNewTopicOrSaveTopic);
 
   return (
     <Flexbox className={styles.top} gap={16} paddingInline={8}>
@@ -61,7 +62,7 @@ const Header = memo(() => {
               onClick={() => mutate()}
               size={DESKTOP_HEADER_ICON_SIZE}
               style={{ flex: 'none' }}
-              title={t('newAgent')}
+              title={t('topic.openNewTopic')}
             />
           )}
         </Flexbox>
