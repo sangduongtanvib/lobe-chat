@@ -48,7 +48,7 @@ export const POST = async (req: Request): Promise<NextResponse> => {
     }
 
     case 'user.updated': {
-      const result = await userService.updateUser(data.id, data);
+      const result = await userService.updateUser(data.id, data as any);
 
       return NextResponse.json(result, { status: 200 });
     }

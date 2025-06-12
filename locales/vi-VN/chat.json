@@ -213,6 +213,10 @@
     "loading": "Đang nhận dạng...",
     "prettifying": "Đang tinh chỉnh..."
   },
+  "tab": {
+    "historyChat": "Lịch sử",
+    "assistantList": "D.S trợ lý"
+  },
   "thread": {
     "divider": "Chủ đề con",
     "threadMessageCount": "{{messageCount}} tin nhắn",
@@ -234,9 +238,9 @@
     "used": "Đã sử dụng"
   },
   "topic": {
-    "checkOpenNewTopic": "Có muốn mở chủ đề mới không?",
+    "checkOpenNewTopic": "Có muốn tạo một cuộc trò chuyện mới không?",
     "checkSaveCurrentMessages": "Bạn có muốn lưu cuộc trò chuyện hiện tại thành chủ đề không?",
-    "openNewTopic": "Mở chủ đề mới",
+    "openNewTopic": "Tạo cuộc trò chuyện mới",
     "saveCurrentMessages": "Lưu cuộc trò chuyện hiện tại thành chủ đề"
   },
   "translate": {
@@ -269,9 +273,5 @@
       }
     }
   },
-  "zenMode": "Chế độ tập trung",
-  "tab": {
-    "historyChat": "Lịch sử",
-    "assistantList": "D.S trợ lý"
-  }
+  "zenMode": "Chế độ tập trung"
 }
