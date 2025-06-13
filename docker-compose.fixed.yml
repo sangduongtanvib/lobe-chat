@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  lobe-chat-database:
+    image: lobe-chat-database:latest
+    ports:
+      - "3210:3210"
+    environment:
+      # General Configuration
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3210
+      - APP_URL=http://localhost:3010
+      
+      # Database Configuration (Required) 
+      - DATABASE_DRIVER=node
+      - DATABASE_URL=postgresql://vibgpt:aAqWcKN*WmnNx2JY!@azure-hk-postgresflex-vibgpt-nonprod-prv-db-001.postgres.database.azure.com:5432/vibgpt?sslmode=require
+      
+      # Service Mode
+      - NEXT_PUBLIC_SERVICE_MODE=server
+      
+      # Security (Set these in production)
+      - KEY_VAULTS_SECRET=your_key_vaults_secret_here
+      - NEXTAUTH_SECRET=your_nextauth_secret_here
+      - NEXTAUTH_URL=https://lobe.example.com/api/auth
+      
+      # Azure OpenAI Configuration
+      - AZURE_API_KEY=9FNrC8BdOJqArMJRfoC3lk6tpjkQZ3dLDfccEGR4wLnvJTf1mIO6JQQJ99BCACHYHv6XJ3w3AAAAACOGyxtr
+      - AZURE_ENDPOINT=https://dctassistresou5125686331.cognitiveservices.azure.com
+      - AZURE_API_VERSION=2024-02-15-preview
+      
+      # Files Configuration
+      - DEFAULT_FILES_CONFIG=embedding_model=azure/text-embedding-ada-002,reranker_model=cohere/rerank-english-v3.0,query_mode=full_text
+      
+      # Search Configuration
+      - SEARXNG_URL=https://search.inetol.net
+      
+      # Feature Flags
+      - FEATURE_FLAGS=-welcome_suggest,+webrtc_sync,+dalle,+search_engine,+rag_eval,+pin_list
+      
+      # Analytics
+      - ENABLE_VERCEL_ANALYTICS=1
+      
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3210/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  default:
+    driver: bridge 
