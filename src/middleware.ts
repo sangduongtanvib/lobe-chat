@@ -65,6 +65,16 @@ const defaultMiddleware = (request: NextRequest) => {
     return NextResponse.next();
   }
 
+  // skip auth routes (NextAuth, Clerk)
+  if (
+    url.pathname.startsWith('/next-auth') ||
+    url.pathname.startsWith('/login') ||
+    url.pathname.startsWith('/signup')
+  ) {
+    logDefault('Skipping auth route: %s', url.pathname);
+    return NextResponse.next();
+  }
+
   // 1. Read user preferences from cookies
   const theme =
     request.cookies.get(LOBE_THEME_APPEARANCE)?.value || parseDefaultThemeFromCountry(request);
