@@ -43,7 +43,7 @@ export const parseBrowserLanguage = (headers: Headers, defaultLang: string = DEF
  * @param props
  */
 export const parsePageLocale = async (props: {
-  params: Promise<{ variants: string }>;
+  params: Promise<{ variant: string }>;
   searchParams: Promise<any>;
 }) => {
   const searchParams = await props.searchParams;

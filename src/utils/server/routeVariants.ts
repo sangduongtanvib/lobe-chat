@@ -50,19 +50,19 @@ export class RouteVariants {
   };
 
   static getVariantsFromProps = async (props: DynamicLayoutProps) => {
-    const { variants } = await props.params;
-    return RouteVariants.deserializeVariants(variants);
+    const { variant } = await props.params;
+    return RouteVariants.deserializeVariants(variant);
   };
 
   static getIsMobile = async (props: DynamicLayoutProps) => {
-    const { variants } = await props.params;
-    const { isMobile } = RouteVariants.deserializeVariants(variants);
+    const { variant } = await props.params;
+    const { isMobile } = RouteVariants.deserializeVariants(variant);
     return isMobile;
   };
 
   static getLocale = async (props: DynamicLayoutProps) => {
-    const { variants } = await props.params;
-    const { locale } = RouteVariants.deserializeVariants(variants);
+    const { variant } = await props.params;
+    const { locale } = RouteVariants.deserializeVariants(variant);
     return locale;
   };
 

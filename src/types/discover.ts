@@ -8,7 +8,7 @@ import { PageProps } from '@/types/next';
 import { LobeAgentSettings } from '@/types/session';
 
 export type DiscoverPageProps<T = string> = PageProps<
-  { slug: T; variants: string },
+  { slug: T; variant: string },
   { hl?: Locales }
 >;
 

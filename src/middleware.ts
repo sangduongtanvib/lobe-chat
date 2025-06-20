@@ -114,10 +114,10 @@ const defaultMiddleware = (request: NextRequest) => {
   }
 
   // refs: https://github.com/lobehub/lobe-chat/pull/5866
-  // new handle segment rewrite: /variants/${route}${originalPathname}
-  // / -> /variants/en-US__0__dark
-  // /discover -> /variants/en-US__0__dark/discover
-  const nextPathname = `/variants/${route}` + (url.pathname === '/' ? '' : url.pathname);
+  // new handle segment rewrite: /v/${route}${originalPathname}
+  // / -> /v/en-US__0__dark
+  // /discover -> /v/en-US__0__dark/discover
+  const nextPathname = `/v/${route}` + (url.pathname === '/' ? '' : url.pathname);
   const nextURL = appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL
     ? urlJoin(url.origin, nextPathname)
     : nextPathname;

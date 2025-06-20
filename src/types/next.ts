@@ -6,5 +6,5 @@ export interface PageProps<Params, SearchParams = undefined> {
 export type PagePropsWithId = PageProps<{ id: string }>;
 
 export interface DynamicLayoutProps {
-  params: Promise<{ variants: string }>;
+  params: Promise<{ variant: string }>;
 }
