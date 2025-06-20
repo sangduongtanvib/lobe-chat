@@ -690,11 +690,14 @@ section_configurate_host() {
     if [[ "$DEPLOY_MODE" == "0" ]]; then
         # Ask if enable https
         echo $(show_message "ask_protocol")
-        ask "(y/n)" "y"
+        ask "(y/n)" "n"
         if [[ "$ask_result" == "y" ]]; then
             PROTOCOL="https"
             # Replace all http with https
             $SED_COMMAND "s#http://#https://#" .env
+        else
+            PROTOCOL="http"
+            # Keep HTTP protocol for Azure or when SSL is handled by load balancer
         fi
     fi
     
@@ -734,9 +737,33 @@ section_configurate_host() {
             echo "Casdoor API" $(show_message "ask_domain" "auth.example.com")
             ask "(auth.example.com)"
             CASDOOR_HOST="$ask_result"
+            
+            # Set default ports for domain mode (used internally)
+            LOBE_CHAT_PORT_INPUT=${LOBE_CHAT_PORT_DEFAULT}
+            MINIO_API_PORT_INPUT=${MINIO_API_PORT_DEFAULT}
+            MINIO_CONSOLE_PORT_INPUT=${MINIO_CONSOLE_PORT_DEFAULT}
+            CASDOOR_PORT_INPUT=${CASDOOR_PORT_DEFAULT}
+            POSTGRES_PORT_INPUT=${POSTGRES_PORT_DEFAULT}
+            LOGTO_API_PORT_INPUT=${LOGTO_API_PORT_DEFAULT}
+            LOGTO_ADMIN_PORT_INPUT=${LOGTO_ADMIN_PORT_DEFAULT}
+            
+            # Setup URL hosts for domain mode
+            MINIO_API_URL_HOST="$MINIO_HOST" # For S3_ENDPOINT
+            MINIO_PUBLIC_URL_HOST="$MINIO_HOST" # For S3_PUBLIC_DOMAIN
+            CASDOOR_URL_HOST="$CASDOOR_HOST" # For AUTH_CASDOOR_ISSUER
+            
+            # Update .env with default ports for domain mode
+            $SED_COMMAND "s#^LOBE_PORT=.*#LOBE_PORT=${LOBE_CHAT_PORT_INPUT}#" .env
+            $SED_COMMAND "s#^MINIO_PORT=.*#MINIO_PORT=${MINIO_API_PORT_INPUT}#" .env
+            $SED_COMMAND "s#^MINIO_CONSOLE_PORT=.*#MINIO_CONSOLE_PORT=${MINIO_CONSOLE_PORT_INPUT}#" .env
+            $SED_COMMAND "s#^CASDOOR_PORT=.*#CASDOOR_PORT=${CASDOOR_PORT_INPUT}#" .env
+            $SED_COMMAND "s#^POSTGRES_PORT=.*#POSTGRES_PORT=${POSTGRES_PORT_INPUT}#" .env
+            $SED_COMMAND "s#^LOGTO_API_PORT=.*#LOGTO_API_PORT=${LOGTO_API_PORT_INPUT}#" .env
+            $SED_COMMAND "s#^LOGTO_ADMIN_PORT=.*#LOGTO_ADMIN_PORT=${LOGTO_ADMIN_PORT_INPUT}#" .env
+            
             # Setup callback url for Casdoor
-            $SED_COMMAND "s#\"http://example.com/api/auth/callback/casdoor\"#\"http://${LOBE_HOST}/api/auth/callback/casdoor\"#" init_data.json
-            $SED_COMMAND "s#\"https://example.com/api/auth/callback/casdoor\"#\"https://${LOBE_HOST}/api/auth/callback/casdoor\"#" init_data.json
+            $SED_COMMAND "s#\"http://example.com/api/auth/callback/casdoor\"#\"$PROTOCOL://${LOBE_HOST}/api/auth/callback/casdoor\"#" init_data.json
+            $SED_COMMAND "s#\"https://example.com/api/auth/callback/casdoor\"#\"$PROTOCOL://${LOBE_HOST}/api/auth/callback/casdoor\"#" init_data.json
         ;;
         1)
             DEPLOY_MODE="ip"
@@ -946,47 +973,6 @@ if [[ "$ask_result" == "y" ]]; then
     section_regenerate_secrets
 fi
 
-# ==========================
-# === Configure API Keys ===
-# ==========================
-section_configure_api_keys() {
-    show_message "api_keys_intro"
-    
-    # Azure API Key
-    show_message "ask_azure_api_key"
-    ask "AZURE_API_KEY" ""
-    if [ -n "$ask_result" ]; then
-        $SED_COMMAND "/^# AZURE_API_KEY=/d" .env
-        safe_append_env "AZURE_API_KEY" "$ask_result"
-    fi
-    
-    # Azure Endpoint
-    show_message "ask_azure_endpoint"
-    ask "AZURE_ENDPOINT" ""
-    if [ -n "$ask_result" ]; then
-        $SED_COMMAND "/^# AZURE_ENDPOINT=/d" .env
-        safe_append_env "AZURE_ENDPOINT" "$ask_result"
-    fi
-    
-    # AWS Access Key ID
-    show_message "ask_aws_access_key"
-    ask "AWS_ACCESS_KEY_ID" ""
-    if [ -n "$ask_result" ]; then
-        $SED_COMMAND "/^# AWS_ACCESS_KEY_ID=/d" .env
-        safe_append_env "AWS_ACCESS_KEY_ID" "$ask_result"
-    fi
-    
-    # AWS Secret Access Key
-    show_message "ask_aws_secret_key"
-    ask "AWS_SECRET_ACCESS_KEY" ""
-    if [ -n "$ask_result" ]; then
-        $SED_COMMAND "/^# AWS_SECRET_ACCESS_KEY=/d" .env
-        safe_append_env "AWS_SECRET_ACCESS_KEY" "$ask_result"
-    fi
-    
-    show_message "api_keys_completed"
-}
-
 section_init_database() {
     if ! command -v docker &> /dev/null ; then
         echo "docker" $(show_message "tips_no_executable")
@@ -1035,7 +1021,13 @@ section_display_configurated_report() {
     
     echo -e "LobeChat: \\n  - URL: $PROTOCOL://$LOBE_HOST \\n  - Username: user \\n  - Password: ${CASDOOR_PASSWORD} "
     echo -e "Casdoor: \\n  - URL: $PROTOCOL://$CASDOOR_URL_HOST \\n  - Username: admin \\n  - Password: ${CASDOOR_PASSWORD}\\n"
-    echo -e "Minio: \\n  - API URL: $PROTOCOL://$MINIO_API_URL_HOST \\n  - Console URL: $PROTOCOL://${HOST}:${MINIO_CONSOLE_PORT_INPUT} \\n  - Username: admin\\n  - Password: ${MINIO_ROOT_PASSWORD}\\n"
+    
+    # Display MinIO URLs based on deployment mode
+    if [[ "$DEPLOY_MODE" == "domain" ]]; then
+        echo -e "Minio: \\n  - API URL: $PROTOCOL://$MINIO_API_URL_HOST \\n  - Console URL: $PROTOCOL://minio-console.${MINIO_HOST#*.} \\n  - Username: admin\\n  - Password: ${MINIO_ROOT_PASSWORD}\\n"
+    else
+        echo -e "Minio: \\n  - API URL: $PROTOCOL://$MINIO_API_URL_HOST \\n  - Console URL: $PROTOCOL://${HOST}:${MINIO_CONSOLE_PORT_INPUT} \\n  - Username: admin\\n  - Password: ${MINIO_ROOT_PASSWORD}\\n"
+    fi
     
     # Display configured API keys (without showing actual values for security)
     echo "Configured API Keys:"

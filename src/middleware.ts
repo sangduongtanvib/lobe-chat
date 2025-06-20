@@ -114,10 +114,10 @@ const defaultMiddleware = (request: NextRequest) => {
   }
 
   // refs: https://github.com/lobehub/lobe-chat/pull/5866
-  // new handle segment rewrite: /${route}${originalPathname}
-  // / -> /en-US__0__dark
-  // /discover -> /en-US__0__dark/discover
-  const nextPathname = `/${route}` + (url.pathname === '/' ? '' : url.pathname);
+  // new handle segment rewrite: /variants/${route}${originalPathname}
+  // / -> /variants/en-US__0__dark
+  // /discover -> /variants/en-US__0__dark/discover
+  const nextPathname = `/variants/${route}` + (url.pathname === '/' ? '' : url.pathname);
   const nextURL = appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL
     ? urlJoin(url.origin, nextPathname)
     : nextPathname;
@@ -184,7 +184,11 @@ const nextAuthMiddleware = NextAuthEdge.auth((req) => {
     }
   } else {
     // If not logged in, redirect to sign-in page for all routes except login pages
-    if (isProtected && !req.nextUrl.pathname.startsWith('/login') && !req.nextUrl.pathname.startsWith('/next-auth/signin')) {
+    if (
+      isProtected &&
+      !req.nextUrl.pathname.startsWith('/login') &&
+      !req.nextUrl.pathname.startsWith('/next-auth/signin')
+    ) {
       logNextAuth('User not logged in, redirecting to sign-in page');
       const nextLoginUrl = new URL('/next-auth/signin', req.nextUrl.origin);
       nextLoginUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
