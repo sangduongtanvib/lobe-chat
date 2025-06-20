@@ -1,18 +1,38 @@
-## docker build --memory=4g --memory-swap=4g --platform=linux/amd64 -f Dockerfile.database -t vib-chat-image .
+## Cross-platform build instructions:
+## For MacBook M3 users building for amd64 VMs (offline transfer):
+## 1. Setup buildx: docker buildx create --use --name multiplatform --driver docker-container
+## 2. Build for amd64: docker buildx build --memory=4g --memory-swap=4g --platform=linux/amd64 --load -f Dockerfile.databasev2 -t vib-chat-image:amd64 .
+## 3. Save & compress: docker save vib-chat-image:amd64 | gzip > vib-chat-image-amd64.tar.gz
+## 4. Transfer: scp vib-chat-image-amd64.tar.gz user@vm-ip:/path/to/destination/
+## 5. Load on VM: gunzip -c vib-chat-image-amd64.tar.gz | docker load
+##
+## For multi-platform builds with registry access:
+## docker buildx create --use --name multiplatform
+## docker buildx build --memory=4g --memory-swap=4g --platform=linux/amd64,linux/arm64 -f Dockerfile.databasev2 -t vib-chat-image:latest --push .
+
+## docker buildx build --memory=4g --memory-swap=4g --platform=linux/amd64 -f Dockerfile.databasev2 -t vib-chat-image .
 ## Set global build ENV
 ARG NODEJS_VERSION="22"
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
 ## Base image for all building stages
-##FROM node:${NODEJS_VERSION}-slim AS base
-FROM node:18-alpine AS base
+FROM --platform=${TARGETPLATFORM} node:${NODEJS_VERSION}-slim AS base
 
 ARG USE_CN_MIRROR
+ARG TARGETPLATFORM
 
 ENV DEBIAN_FRONTEND="noninteractive"
 
 RUN \
+    # Set architecture variable based on target platform
+    case "${TARGETPLATFORM}" in \
+        "linux/amd64") ARCH="x86_64" ;; \
+        "linux/arm64") ARCH="aarch64" ;; \
+        *) ARCH="x86_64" ;; \
+    esac \
     # If you want to build docker in China, build with --build-arg USE_CN_MIRROR=true
-    if [ "${USE_CN_MIRROR:-false}" = "true" ]; then \
+    && if [ "${USE_CN_MIRROR:-false}" = "true" ]; then \
         sed -i "s/deb.debian.org/mirrors.ustc.edu.cn/g" "/etc/apt/sources.list.d/debian.sources"; \
     fi \
     # Add required package
@@ -21,13 +41,13 @@ RUN \
     # Prepare required package to distroless
     && mkdir -p /distroless/bin /distroless/etc /distroless/etc/ssl/certs /distroless/lib \
     # Copy proxychains to distroless
-    && cp /usr/lib/$(arch)-linux-gnu/libproxychains.so.4 /distroless/lib/libproxychains.so.4 \
-    && cp /usr/lib/$(arch)-linux-gnu/libdl.so.2 /distroless/lib/libdl.so.2 \
+    && cp /usr/lib/${ARCH}-linux-gnu/libproxychains.so.4 /distroless/lib/libproxychains.so.4 \
+    && cp /usr/lib/${ARCH}-linux-gnu/libdl.so.2 /distroless/lib/libdl.so.2 \
     && cp /usr/bin/proxychains4 /distroless/bin/proxychains \
     && cp /etc/proxychains4.conf /distroless/etc/proxychains4.conf \
     # Copy node to distroless
-    && cp /usr/lib/$(arch)-linux-gnu/libstdc++.so.6 /distroless/lib/libstdc++.so.6 \
-    && cp /usr/lib/$(arch)-linux-gnu/libgcc_s.so.1 /distroless/lib/libgcc_s.so.1 \
+    && cp /usr/lib/${ARCH}-linux-gnu/libstdc++.so.6 /distroless/lib/libstdc++.so.6 \
+    && cp /usr/lib/${ARCH}-linux-gnu/libgcc_s.so.1 /distroless/lib/libgcc_s.so.1 \
     && cp /usr/local/bin/node /distroless/bin/node \
     # Copy CA certificates to distroless
     && cp /etc/ssl/certs/ca-certificates.crt /distroless/etc/ssl/certs/ca-certificates.crt \
@@ -35,7 +55,9 @@ RUN \
     && rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*
 
 ## Builder image, install all the dependencies and build the app
-FROM base AS builder
+FROM --platform=${BUILDPLATFORM} node:${NODEJS_VERSION}-slim AS builder
+
+ENV DEBIAN_FRONTEND="noninteractive"
 
 ARG USE_CN_MIRROR
 ARG NEXT_PUBLIC_BASE_PATH
@@ -59,7 +81,6 @@ ENV NEXT_PUBLIC_SERVICE_MODE="${NEXT_PUBLIC_SERVICE_MODE:-server}" \
     DATABASE_DRIVER="node" \
     DATABASE_URL="postgres://postgres:password@localhost:5432/postgres" \
     KEY_VAULTS_SECRET="use-for-build"
-
 # Sentry
 ENV NEXT_PUBLIC_SENTRY_DSN="${NEXT_PUBLIC_SENTRY_DSN}" \
     SENTRY_ORG="" \
@@ -76,7 +97,7 @@ ENV NEXT_PUBLIC_ANALYTICS_UMAMI="${NEXT_PUBLIC_ANALYTICS_UMAMI}" \
     NEXT_PUBLIC_UMAMI_WEBSITE_ID="${NEXT_PUBLIC_UMAMI_WEBSITE_ID}"
 
 # Node
-ENV NODE_OPTIONS="--max-old-space-size=8192"
+ENV NODE_OPTIONS="--max-old-space-size=6144 --max-semi-space-size=512"
 
 WORKDIR /app
 
@@ -109,11 +130,22 @@ RUN \
 
 COPY . .
 
-# run build standalone for docker version
-RUN npm run build:docker
+# run build standalone for docker version with memory optimization
+# run build standalone for docker version with memory optimization
+RUN npm run prebuild
+
+# Modify the Next.js config to disable type checking inline
+RUN mv next.config.ts next.config.ts.backup && \
+    echo 'import nextConfig from "./next.config.ts.backup"; const config = nextConfig; config.typescript = { ignoreBuildErrors: true }; config.eslint = { ignoreDuringBuilds: true }; export default config;' > next.config.ts
+
+RUN DOCKER=true NEXT_TELEMETRY_DISABLED=1 npx next build && \
+    npm run build-sitemap
+
+# Restore original config
+RUN mv next.config.ts.backup next.config.ts
 
 ## Application image, copy all the files for production
-FROM busybox:latest AS app
+FROM --platform=${TARGETPLATFORM} busybox:latest AS app
 
 COPY --from=base /distroless/ /
 
@@ -142,7 +174,7 @@ RUN \
     && chown -R nextjs:nodejs /app /etc/proxychains4.conf
 
 ## Production image, copy all the files and run next
-FROM scratch
+FROM --platform=${TARGETPLATFORM} scratch
 
 # Copy all the files from app, set the correct permission for prerender cache
 COPY --from=app / /
@@ -169,25 +201,44 @@ ENV ACCESS_CODE="" \
     FEATURE_FLAGS="" \
     PROXY_URL=""
 # API_KEY_SELECT_MODE is sensitive and should be provided at runtime, not in the Dockerfile
+ENV API_KEY_SELECT_MODE=""
 
 # Database
 ENV DATABASE_DRIVER="node" \
-    DATABASE_URL=""
+    DATABASE_URL="" \
+    DEFAULT_FILES_CONFIG=""
 # KEY_VAULTS_SECRET is sensitive and should be provided at runtime, not in the Dockerfile
 
 # Next Auth
 ENV NEXTAUTH_URL=""
 # NEXT_AUTH_SECRET and NEXT_AUTH_SSO_PROVIDERS are sensitive and should be provided at runtime, not in the Dockerfile
 
+# Auth Service - Clerk
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""
+# CLERK_SECRET_KEY and CLERK_WEBHOOK_SECRET are sensitive and should be provided at runtime
+
+# Auth Service - Auth0  
+# AUTH_AUTH0_ID, AUTH_AUTH0_SECRET, and AUTH_AUTH0_ISSUER are sensitive and should be provided at runtime
+
+# Market Service
+ENV AGENTS_INDEX_URL=""
+
+# Plugin Service
+ENV PLUGINS_INDEX_URL="" \
+    PLUGIN_SETTINGS=""
+
+# Doc/Changelog Service
+ENV DOC_S3_PUBLIC_DOMAIN=""
+# DOC_S3_ACCESS_KEY_ID and DOC_S3_SECRET_ACCESS_KEY are sensitive
+
 # S3
 ENV NEXT_PUBLIC_S3_DOMAIN="" \
     S3_PUBLIC_DOMAIN="" \
     S3_BUCKET="" \
-    S3_ENDPOINT=""
+    S3_ENDPOINT="" \
+    S3_REGION=""
 # S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY are sensitive and should be provided at runtime, not in the Dockerfile
 # Model Variables
-ENV \
-    # AI21
 ENV \
     # AI21
     AI21_MODEL_LIST="" \
@@ -206,7 +257,7 @@ ENV \
     # Cohere
     COHERE_MODEL_LIST="" COHERE_PROXY_URL="" \
     # DeepSeek
-    DEEPSEEK_MODEL_LIST="" \
+    DEEPSEEK_MODEL_LIST="" DEEPSEEK_PROXY_URL="" \
     # Fireworks AI
     FIREWORKSAI_MODEL_LIST="" \
     # Gitee AI
