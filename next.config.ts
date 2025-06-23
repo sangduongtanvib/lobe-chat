@@ -34,6 +34,8 @@ const nextConfig: NextConfig = {
       '@lobehub/ui',
       'gpt-tokenizer',
     ],
+    // Tắt typedRoutes vì nó gây lỗi kiểm tra kiểu trong build
+    // typedRoutes: true,
     // oidc provider depend on constructor.name
     // but swc minification will remove the name
     // so we need to disable it
@@ -198,74 +200,28 @@ const nextConfig: NextConfig = {
   // Thêm rewrites để xử lý các đường dẫn tệp JavaScript chunks
   async rewrites() {
     return [
-      // Chat & Workspace
+      // Chuyển đổi tất cả các URL có dạng app/v/[variant]/(main) thành app/variant/{route}/main
       {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace/:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/:file*',
+        destination: '/_next/static/:path*/app/variant/:variant/:rest*',
+        source: '/_next/static/:path*/app/v/:variant/:rest*',
       },
-      // Chat Session
+      // Xử lý các dấu ngoặc trong các URL chunks
       {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-session/:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/chat/%40session/:file*',
-      },
-      // Chat Portal
-      {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace-portal/:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/%40portal/:file*',
-      },
-      // Chat Topic
-      {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace-topic/:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/%40topic/:file*',
-      },
-      // Chat Conversation
-      {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace-conversation/:file*',
-        source:
-          '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/%40conversation/:file*',
-      },
-      // Chat Layout
-      {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-layout:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/chat/layout:file*',
-      },
-      // Chat Workspace Layout
-      {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace-layout:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/layout:file*',
-      },
-      // Main Layout
-      {
-        destination: '/_next/static/:path*/app/v/variant/main-layout:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/layout:file*',
-      },
-      // Error Pages
-      {
-        destination: '/_next/static/:path*/app/v/variant/main-error:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/error:file*',
+        destination: '/_next/static/:path*/app/:folder/:file*/workspace/:rest*',
+        source: '/_next/static/:path*/app/:folder/:file*/(workspace)/:rest*',
       },
       {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-error:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/chat/error:file*',
-      },
-      // Not Found Pages
-      {
-        destination: '/_next/static/:path*/app/v/variant/main-not-found:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/not-found:file*',
+        destination: '/_next/static/:path*/app/:folder/:file*/main/:rest*',
+        source: '/_next/static/:path*/app/:folder/:file*/(main)/:rest*',
       },
       {
-        destination: '/_next/static/:path*/app/v/variant/main-chat-not-found:file*',
-        source: '/_next/static/:path*/app/v/:variant/(main)/chat/not-found:file*',
+        destination: '/_next/static/:path*/app/:folder/:file*/auth/:rest*',
+        source: '/_next/static/:path*/app/:folder/:file*/(auth)/:rest*',
       },
-      // Auth
+      // Xử lý ký tự @ trong URL
       {
-        destination: '/_next/static/:path*/app/auth/next-auth/:file*',
-        source: '/_next/static/:path*/app/:variant/(auth)/next-auth/:file*',
-      },
-      // API routes
-      {
-        destination: '/_next/static/:path*/app/backend-webapi-:feature-provider/:file*',
-        source: '/_next/static/:path*/app/(backend)/webapi/:feature/:provider/:file*',
+        destination: '/_next/static/:path*/at-:file*',
+        source: '/_next/static/:path*/%40:file*',
       },
     ];
   },

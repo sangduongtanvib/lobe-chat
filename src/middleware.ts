@@ -178,7 +178,20 @@ const defaultMiddleware = (request: NextRequest) => {
     originalPathname: url.pathname,
   });
 
-  url.pathname = nextPathname;
+  // Thay đổi cấu trúc đường dẫn để tránh WAF chặn
+  // Thay vì sử dụng /v/[variant]/(main)/... thì sử dụng /variant/{route}/main/...
+  // giúp tránh được các ký tự đặc biệt trong URL
+  const safeRoutePathname =
+    `/variant/${route}/main` +
+    (url.pathname === '/' ? '' : url.pathname)
+      .replace(/^\/(discover|chat|settings|changelog|me|profile)/, '/$1')
+      .replace('(workspace)', 'workspace')
+      .replace('(auth)', 'auth')
+      .replace('(detail)', 'detail');
+
+  url.pathname = safeRoutePathname;
+
+  logDefault('Safe route pathname: %s', safeRoutePathname);
 
   return NextResponse.rewrite(url, { status: 200 });
 };

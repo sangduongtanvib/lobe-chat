@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { memo, useEffect, useLayoutEffect } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BRANDING_NAME } from '@/const/branding';
@@ -18,6 +18,7 @@ const PWA: any = dynamic(() => import('@khmyznikov/pwa-install/dist/pwa-install.
 
 const PWAInstall = memo(() => {
   const { t } = useTranslation('metadata');
+  const isMountedRef = useRef(false);
 
   const { install, canInstall } = usePWAInstall();
 
@@ -29,7 +30,16 @@ const PWAInstall = memo(() => {
 
   // we need to make the pwa installer hidden by default
   useLayoutEffect(() => {
-    sessionStorage.setItem('pwa-hide-install', 'true');
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('pwa-hide-install', 'true');
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   const pwaInstall =
@@ -38,35 +48,47 @@ const PWAInstall = memo(() => {
 
   // add an event listener to control the user close installer action
   useEffect(() => {
-    if (!pwaInstall) return;
+    if (!pwaInstall || !isMountedRef.current) return;
 
     const handler = (e: Event) => {
+      if (!isMountedRef.current) return;
+
       const event = e as CustomEvent;
 
       // it means user hide installer
       if (event.detail.message === 'dismissed') {
-        updateSystemStatus({ hidePWAInstaller: true });
+        try {
+          updateSystemStatus({ hidePWAInstaller: true });
+        } catch (error) {
+          console.warn('PWA installer update failed:', error);
+        }
       }
     };
 
     pwaInstall.addEventListener('pwa-user-choice-result-event', handler);
     return () => {
-      pwaInstall.removeEventListener('pwa-user-choice-result-event', handler);
+      if (pwaInstall) {
+        pwaInstall.removeEventListener('pwa-user-choice-result-event', handler);
+      }
     };
-  }, [pwaInstall]);
+  }, [pwaInstall, updateSystemStatus]);
 
   // trigger the PWA guide on demand
   useEffect(() => {
-    if (!canInstall || hidePWAInstaller) return;
+    if (!canInstall || hidePWAInstaller || !isMountedRef.current) return;
 
     // trigger the pwa installer and register the service worker
     if (isShowPWAGuide) {
-      install();
-      if ('serviceWorker' in navigator && window.serwist !== undefined) {
-        window.serwist.register();
+      try {
+        install();
+        if ('serviceWorker' in navigator && window.serwist !== undefined) {
+          window.serwist.register();
+        }
+      } catch (error) {
+        console.warn('PWA installation failed:', error);
       }
     }
-  }, [canInstall, hidePWAInstaller, isShowPWAGuide]);
+  }, [canInstall, hidePWAInstaller, isShowPWAGuide, install]);
 
   return (
     <PWA

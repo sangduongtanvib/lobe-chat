@@ -1,5 +1,5 @@
 import { uniq } from 'lodash-es';
-import { DependencyList } from 'react';
+import { DependencyList, useEffect, useRef } from 'react';
 import { type HotkeyCallback, type Options, useHotkeys } from 'react-hotkeys-hook';
 
 import { HOTKEYS_REGISTRATION } from '@/const/hotkeys';
@@ -19,6 +19,14 @@ export const useHotkeyById = (
 ) => {
   const hotkey = useUserStore(settingsSelectors.getHotkeyById(hotkeyId));
   const mobile = useServerConfigStore((s) => s.isMobile);
+  const isMountedRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const _options: Options | undefined = !Array.isArray(options)
     ? (options as Options)
@@ -34,12 +42,20 @@ export const useHotkeyById = (
 
   const item = HOTKEYS_REGISTRATION.find((item) => item.id === hotkeyId);
 
-  const ref = useHotkeys(
-    hotkey,
-    (...props) => {
+  const safeCallback: HotkeyCallback = (...props) => {
+    if (!isMountedRef.current) return;
+
+    try {
       if (isDev) console.log('[Hotkey]', hotkeyId);
       return callback(...props);
-    },
+    } catch (error) {
+      console.warn(`Hotkey callback error for ${hotkeyId}:`, error);
+    }
+  };
+
+  const ref = useHotkeys(
+    hotkey,
+    safeCallback,
     {
       enableOnFormTags: true,
       preventDefault: true,
