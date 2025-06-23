@@ -22,6 +22,7 @@ const standaloneConfig: NextConfig = {
 
 const nextConfig: NextConfig = {
   ...(isStandaloneMode ? standaloneConfig : {}),
+  assetPrefix: process.env.NEXT_PUBLIC_ASSET_PREFIX || undefined,
   basePath,
   compress: isProd,
   experimental: {
@@ -197,15 +198,64 @@ const nextConfig: NextConfig = {
   // Thêm rewrites để xử lý các đường dẫn tệp JavaScript chunks
   async rewrites() {
     return [
-      // Chat
+      // Chat & Workspace
       {
         destination: '/_next/static/:path*/app/v/variant/main-chat-workspace/:file*',
         source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/:file*',
       },
-      // Not found
+      // Chat Session
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-session/:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/chat/%40session/:file*',
+      },
+      // Chat Portal
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace-portal/:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/%40portal/:file*',
+      },
+      // Chat Topic
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace-topic/:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/%40topic/:file*',
+      },
+      // Chat Conversation
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace-conversation/:file*',
+        source:
+          '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/%40conversation/:file*',
+      },
+      // Chat Layout
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-layout:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/chat/layout:file*',
+      },
+      // Chat Workspace Layout
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace-layout:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/layout:file*',
+      },
+      // Main Layout
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-layout:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/layout:file*',
+      },
+      // Error Pages
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-error:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/error:file*',
+      },
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-error:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/chat/error:file*',
+      },
+      // Not Found Pages
       {
         destination: '/_next/static/:path*/app/v/variant/main-not-found:file*',
         source: '/_next/static/:path*/app/v/:variant/(main)/not-found:file*',
+      },
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-not-found:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/chat/not-found:file*',
       },
       // Auth
       {

@@ -4,14 +4,36 @@ import { NextRequest, NextResponse } from 'next/server';
 const logStatic = debug('lobe-middleware:static');
 
 export const config = {
-  matcher: ['/_next/static/chunks/:path*'],
+  matcher: [
+    '/_next/static/chunks/:path*',
+    '/static/chunks/:path*', // Đảm bảo bắt cả đường dẫn static
+  ],
 };
 
 export default function middleware(req: NextRequest) {
   const url = new URL(req.url);
 
-  // Kiểm tra URL có chứa các ký tự đặc biệt
-  if (/(%5b|%5d|%28|%29)/i.test(url.pathname)) {
+  // Danh sách các pattern cần xử lý dựa trên báo cáo
+  const patterns = [
+    '%5Bvariant%5D/(main)/chat/(workspace)/%40portal',
+    '%5Bvariant%5D/(main)/chat/%40session',
+    '%5Bvariant%5D/(main)/layout',
+    '%5Bvariant%5D/(main)/error',
+    '%5Bvariant%5D/(main)/chat/not-found',
+    '%5Bvariant%5D/(main)/chat/(workspace)/%40topic',
+    '%5Bvariant%5D/(main)/chat/layout',
+    '%5Bvariant%5D/(main)/chat/error',
+    '%5Bvariant%5D/(main)/chat/(workspace)/layout',
+    '%5Bvariant%5D/(main)/chat/(workspace)/%40conversation',
+    '%5Bvariant%5D/(main)/chat/(workspace)/page',
+    '%5Bvariant%5D/(main)/not-found',
+  ];
+
+  // Kiểm tra URL có chứa các ký tự đặc biệt hoặc pattern đã biết
+  const hasEncodedChars = url.pathname.match(/(%5b|%5d|%28|%29|%40)/i);
+  const matchesKnownPattern = patterns.some((pattern) => url.pathname.includes(pattern));
+
+  if (hasEncodedChars || matchesKnownPattern) {
     logStatic('Processing static asset with encoded brackets: %s', url.pathname);
 
     // Thay thế tất cả các pattern đặc biệt trong URL
@@ -28,7 +50,8 @@ export default function middleware(req: NextRequest) {
       // Parentheses
       .replaceAll('%28', 'open-')
       .replaceAll('%29', '-close')
-      // Periods
+      // Special characters
+      .replaceAll('%40', 'at-')
       .replaceAll('%2E', 'dot');
 
     logStatic('Rewriting URL to: %s', newPathname);

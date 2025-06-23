@@ -59,17 +59,20 @@ const defaultMiddleware = (request: NextRequest) => {
   const url = new URL(request.url);
   logDefault('Processing request: %s %s', request.method, request.url);
 
-  // Chặn và rewrite các URL có ký tự đặc biệt trước khi đến WAF
+  // Các URL có chứa ký tự đặc biệt mã hóa
   if (
     url.pathname.includes('/_next/static/chunks/') &&
     (url.pathname.includes('%5B') ||
       url.pathname.includes('%5D') ||
       url.pathname.includes('%28') ||
-      url.pathname.includes('%29'))
+      url.pathname.includes('%29') ||
+      url.pathname.includes('%40'))
   ) {
-    // Đường dẫn được rewrite để dễ dàng thông qua WAF
+    logDefault('Rewriting URL with encoded special characters: %s', url.pathname);
+
     // Thay thế các ký tự đặc biệt bằng các ký tự thường
     let newPathname = url.pathname
+      // Dynamic routes
       .replaceAll('%5Bvariant%5D', 'variant')
       .replaceAll('%5Bvariants%5D', 'variants')
       .replaceAll('%5Bprovider%5D', 'provider')
@@ -77,14 +80,17 @@ const defaultMiddleware = (request: NextRequest) => {
       .replaceAll('%5Bid%5D', 'id')
       .replaceAll('%5Bimage%5D', 'image')
       .replaceAll('%5B...slugs%5D', 'slugs')
-      .replaceAll('%5Buid%5D', 'uid')
+      // Parentheses
       .replaceAll('%28', 'open-')
-      .replaceAll('%29', '-close');
+      .replaceAll('%29', '-close')
+      // Special characters
+      .replaceAll('%40', 'at-');
 
-    logDefault('Rewriting static chunk URL from: %s to: %s', url.pathname, newPathname);
+    const newUrl = new URL(url);
+    newUrl.pathname = newPathname;
 
-    url.pathname = newPathname;
-    return NextResponse.rewrite(url);
+    logDefault('Rewritten URL: %s', newUrl.toString());
+    return NextResponse.rewrite(newUrl);
   }
 
   // skip all api requests
