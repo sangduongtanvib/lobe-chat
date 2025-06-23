@@ -194,6 +194,31 @@ const nextConfig: NextConfig = {
       source: '/repos',
     },
   ],
+  // Thêm rewrites để xử lý các đường dẫn tệp JavaScript chunks
+  async rewrites() {
+    return [
+      // Chat
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-chat-workspace/:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/chat/(workspace)/:file*',
+      },
+      // Not found
+      {
+        destination: '/_next/static/:path*/app/v/variant/main-not-found:file*',
+        source: '/_next/static/:path*/app/v/:variant/(main)/not-found:file*',
+      },
+      // Auth
+      {
+        destination: '/_next/static/:path*/app/auth/next-auth/:file*',
+        source: '/_next/static/:path*/app/:variant/(auth)/next-auth/:file*',
+      },
+      // API routes
+      {
+        destination: '/_next/static/:path*/app/backend-webapi-:feature-provider/:file*',
+        source: '/_next/static/:path*/app/(backend)/webapi/:feature/:provider/:file*',
+      },
+    ];
+  },
   // when external packages in dev mode with turbopack, this config will lead to bundle error
   serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
 
@@ -242,10 +267,10 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true' ? analyzer() : noWrapp
 const withPWA =
   isProd && !isDesktop
     ? withSerwistInit({
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         register: false,
         swDest: 'public/sw.js',
-        swSrc: 'src/app/sw.ts',
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB limit for files to cache
+        swSrc: 'src/app/sw.ts', // 10MB limit for files to cache
       })
     : noWrapper;
 

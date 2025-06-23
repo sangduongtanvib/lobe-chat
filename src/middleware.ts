@@ -59,19 +59,52 @@ const defaultMiddleware = (request: NextRequest) => {
   const url = new URL(request.url);
   logDefault('Processing request: %s %s', request.method, request.url);
 
+  // Chặn và rewrite các URL có ký tự đặc biệt trước khi đến WAF
+  if (
+    url.pathname.includes('/_next/static/chunks/') &&
+    (url.pathname.includes('%5B') ||
+      url.pathname.includes('%5D') ||
+      url.pathname.includes('%28') ||
+      url.pathname.includes('%29'))
+  ) {
+    // Đường dẫn được rewrite để dễ dàng thông qua WAF
+    // Thay thế các ký tự đặc biệt bằng các ký tự thường
+    let newPathname = url.pathname
+      .replaceAll('%5Bvariant%5D', 'variant')
+      .replaceAll('%5Bvariants%5D', 'variants')
+      .replaceAll('%5Bprovider%5D', 'provider')
+      .replaceAll('%5Bslug%5D', 'slug')
+      .replaceAll('%5Bid%5D', 'id')
+      .replaceAll('%5Bimage%5D', 'image')
+      .replaceAll('%5B...slugs%5D', 'slugs')
+      .replaceAll('%5Buid%5D', 'uid')
+      .replaceAll('%28', 'open-')
+      .replaceAll('%29', '-close');
+
+    logDefault('Rewriting static chunk URL from: %s to: %s', url.pathname, newPathname);
+
+    url.pathname = newPathname;
+    return NextResponse.rewrite(url);
+  }
+
   // skip all api requests
   if (backendApiEndpoints.some((path) => url.pathname.startsWith(path))) {
     logDefault('Skipping API request: %s', url.pathname);
     return NextResponse.next();
   }
 
-  // skip auth routes (NextAuth, Clerk)
+  // skip auth routes (NextAuth, Clerk) and other problematic routes
   if (
     url.pathname.startsWith('/next-auth') ||
     url.pathname.startsWith('/login') ||
-    url.pathname.startsWith('/signup')
+    url.pathname.startsWith('/signup') ||
+    (url.pathname.includes('chat') && url.pathname.includes('(workspace)')) ||
+    (url.pathname.includes('discover') &&
+      (url.pathname.includes('model') ||
+        url.pathname.includes('assistant') ||
+        url.pathname.includes('plugin')))
   ) {
-    logDefault('Skipping auth route: %s', url.pathname);
+    logDefault('Skipping sensitive route: %s', url.pathname);
     return NextResponse.next();
   }
 
