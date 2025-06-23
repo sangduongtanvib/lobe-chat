@@ -42,8 +42,16 @@ const nextConfig: NextConfig = {
     // refs: https://github.com/lobehub/lobe-chat/pull/7430
     serverMinification: false,
     webVitalsAttribution: ['CLS', 'LCP'],
+    // Custom webpack chunk naming để tránh WAF block
+    webpackBuildWorker: true,
   },
-  async headers() {
+  // Custom generateBuildId để tránh ký tự đặc biệt trong build paths
+generateBuildId: async () => {
+    // Tạo build ID không chứa ký tự đặc biệt
+    return process.env.BUILD_ID || 'build-' + Date.now().toString(36);
+  },
+  
+async headers() {
     return [
       {
         headers: [
@@ -119,14 +127,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  logging: {
+  
+logging: {
     fetches: {
       fullUrl: true,
       hmrRefreshes: true,
     },
   },
-  reactStrictMode: true,
-  redirects: async () => [
+  
+reactStrictMode: true,
+  
+  
+redirects: async () => [
     {
       destination: '/sitemap-index.xml',
       permanent: true,
@@ -197,8 +209,10 @@ const nextConfig: NextConfig = {
       source: '/repos',
     },
   ],
-  // Thêm rewrites để xử lý các đường dẫn tệp JavaScript chunks
-  async rewrites() {
+  
+  
+// Thêm rewrites để xử lý các đường dẫn tệp JavaScript chunks
+async rewrites() {
     return [
       // Chuyển đổi tất cả các URL có dạng app/v/[variant]/(main) thành app/variant/{route}/main
       {
@@ -225,9 +239,12 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // when external packages in dev mode with turbopack, this config will lead to bundle error
-  serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
 
+  
+// when external packages in dev mode with turbopack, this config will lead to bundle error
+serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
+
+  
   transpilePackages: ['pdfjs-dist', 'mermaid'],
 
   webpack(config) {
@@ -262,6 +279,43 @@ const nextConfig: NextConfig = {
       ...config.resolve.fallback,
       zipfile: false,
     };
+
+    // Custom webpack plugin để thay thế ký tự đặc biệt trong chunk names
+    if (isProd) {
+      class ChunkNameSanitizerPlugin {
+        apply(compiler: any) {
+          compiler.hooks.compilation.tap('ChunkNameSanitizerPlugin', (compilation: any) => {
+            compilation.hooks.beforeChunkAssets.tap('ChunkNameSanitizerPlugin', () => {
+              compilation.chunks.forEach((chunk: any) => {
+                if (chunk.name) {
+                  // Sanitize chunk name, but skip backend routes
+                  let sanitizedName = chunk.name;
+
+                  // Only sanitize frontend routes (v/[variant] structure)
+                  if (chunk.name.includes('app/v/')) {
+                    sanitizedName = chunk.name
+                      .replaceAll('app/v/[variant]', 'app/variant/dynamic')
+                      .replaceAll('(main)', 'group_main')
+                      .replaceAll('(workspace)', 'group_workspace')
+                      .replaceAll('(auth)', 'group_auth')
+                      .replaceAll(/@([^/]+)/g, 'slot_$1')
+                      .replaceAll(/[%()@[\]]/g, '_')
+                      .replaceAll(/_{2,}/g, '_');
+                  }
+
+                  if (sanitizedName !== chunk.name) {
+                    chunk.name = sanitizedName;
+                  }
+                }
+              });
+            });
+          });
+        }
+      }
+
+      config.plugins.push(new ChunkNameSanitizerPlugin());
+    }
+
     return config;
   },
 };
