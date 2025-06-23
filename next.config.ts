@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
   ...(isStandaloneMode ? standaloneConfig : {}),
   basePath,
   compress: isProd,
+
+  
   experimental: {
     optimizePackageImports: [
       'emoji-mart',
@@ -40,7 +42,8 @@ const nextConfig: NextConfig = {
     serverMinification: false,
     webVitalsAttribution: ['CLS', 'LCP'],
   },
-  async headers() {
+  
+async headers() {
     return [
       {
         headers: [
@@ -116,14 +119,17 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  logging: {
+  
+logging: {
     fetches: {
       fullUrl: true,
       hmrRefreshes: true,
     },
   },
-  reactStrictMode: true,
-  redirects: async () => [
+  
+reactStrictMode: true,
+  
+redirects: async () => [
     {
       destination: '/sitemap-index.xml',
       permanent: true,
@@ -194,8 +200,15 @@ const nextConfig: NextConfig = {
       source: '/repos',
     },
   ],
-  // when external packages in dev mode with turbopack, this config will lead to bundle error
-  serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
+  
+// when external packages in dev mode with turbopack, this config will lead to bundle error
+serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
+  
+
+skipMiddlewareUrlNormalize: false,
+  
+  // Handle URL encoding issues for special characters
+trailingSlash: false,
 
   transpilePackages: ['pdfjs-dist', 'mermaid'],
 
@@ -242,10 +255,10 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true' ? analyzer() : noWrapp
 const withPWA =
   isProd && !isDesktop
     ? withSerwistInit({
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         register: false,
         swDest: 'public/sw.js',
-        swSrc: 'src/app/sw.ts',
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB limit for files to cache
+        swSrc: 'src/app/sw.ts', // 10MB limit for files to cache
       })
     : noWrapper;
 

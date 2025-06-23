@@ -16,6 +16,7 @@ import { RouteVariants } from '@/utils/server/routeVariants';
 
 import { OAUTH_AUTHORIZED } from './const/auth';
 import { oidcEnv } from './envs/oidc';
+import { normalizeStaticUrl } from './middleware-url-fix';
 
 // Create debug logger instances
 const logDefault = debug('lobe-middleware:default');
@@ -58,6 +59,28 @@ const backendApiEndpoints = ['/api', '/trpc', '/webapi', '/oidc'];
 const defaultMiddleware = (request: NextRequest) => {
   const url = new URL(request.url);
   logDefault('Processing request: %s %s', request.method, request.url);
+
+  // Handle URL encoding for static files and chunks first
+  if (
+    url.pathname.includes('%5B') ||
+    url.pathname.includes('%5D') ||
+    url.pathname.includes('%40')
+  ) {
+    const normalizedPath = normalizeStaticUrl(url.pathname);
+
+    // Check if this is a static file request
+    if (
+      normalizedPath.includes('/_next/static/') ||
+      normalizedPath.includes('/chunks/') ||
+      normalizedPath.includes('.js') ||
+      normalizedPath.includes('.css') ||
+      normalizedPath.includes('.map')
+    ) {
+      logDefault('URL encoding fix applied: %s -> %s', url.pathname, normalizedPath);
+      url.pathname = normalizedPath;
+      return NextResponse.rewrite(url);
+    }
+  }
 
   // skip all api requests
   if (backendApiEndpoints.some((path) => url.pathname.startsWith(path))) {

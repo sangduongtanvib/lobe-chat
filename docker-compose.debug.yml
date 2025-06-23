@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  lobe-chat-debug:
+    build:
+      context: .
+      dockerfile: Dockerfile.database
+      args:
+        NEXT_PUBLIC_SERVICE_MODE: server
+        NEXT_PUBLIC_DEVELOPER_DEBUG: 1
+    ports:
+      - "3210:3210"
+      - "9229:9229"  # Debug port
+    environment:
+      # Service Mode
+      - NEXT_PUBLIC_SERVICE_MODE=server
+      - NEXT_PUBLIC_DEVELOPER_DEBUG=1
+      
+      # Database Configuration
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/lobechat
+      - DATABASE_DRIVER=node
+      - KEY_VAULTS_SECRET=jgwsK28dspyVQoIf8/M3IIHl1h6LYYceSYNXeLPtdYI=
+      
+      # App Configuration  
+      - APP_URL=http://localhost:3210
+      - NEXTAUTH_URL=http://localhost:3210
+      
+      # Debug Configuration
+      - NODE_OPTIONS=--inspect=0.0.0.0:9229
+      - DEBUG=*
+    depends_on:
+      - postgres
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+    command: ["node", "--inspect=0.0.0.0:9229", "/app/server.js"]
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      - POSTGRES_DB=lobechat
+      - POSTGRES_USER=postgres  
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  postgres_data: 
