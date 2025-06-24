@@ -1,0 +1,45 @@
+@charset "UTF-8";
+
+/**
+ * Offline Fonts Bundle for Lobe Chat
+ * This file imports all necessary fonts for offline usage
+ */
+
+/* Import Hack Monospace Font */
+@import url('./webfont-mono.css');
+
+/* Import HarmonyOS Sans Font */
+@import url('./harmony-sans/index.css');
+
+/* Import HarmonyOS Sans SC Font */
+@import url('./harmony-sans-sc/index.css');
+
+/* Import KaTeX CSS */
+@import url('./katex/katex.min.css');
+
+/* Font fallbacks for better offline experience */
+:root {
+  --font-mono: 'Hack', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
+  --font-sans: 'HarmonyOS Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans-sc: 'HarmonyOS Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', sans-serif;
+}
+
+/* Apply fallback fonts */
+body {
+  font-family: var(--font-sans);
+}
+
+code,
+pre,
+.font-mono,
+[style*="font-family: monospace"],
+[style*="font-family:monospace"] {
+  font-family: var(--font-mono) !important;
+}
+
+/* Chinese text fallback */
+[lang="zh-CN"],
+[lang="zh-Hans"],
+.chinese-text {
+  font-family: var(--font-sans-sc);
+}

@@ -59,6 +59,49 @@ const defaultMiddleware = (request: NextRequest) => {
   const url = new URL(request.url);
   logDefault('Processing request: %s %s', request.method, request.url);
 
+  // Intercept CDN font requests and redirect to local fonts
+  if (url.hostname === 'registry.npmmirror.com') {
+    const pathname = url.pathname;
+    const newUrl = new URL(url);
+    
+    // Redirect webfont-mono requests
+    if (pathname.includes('@lobehub/webfont-mono') && pathname.endsWith('/css/index.css')) {
+      newUrl.hostname = request.headers.get('host') || 'localhost';
+      newUrl.pathname = '/fonts/webfont-mono.css';
+      newUrl.port = '';
+      return NextResponse.redirect(newUrl);
+    }
+    
+    // Redirect harmony-sans requests
+    if (pathname.includes('@lobehub/webfont-harmony-sans') && pathname.endsWith('/css/index.css')) {
+      newUrl.hostname = request.headers.get('host') || 'localhost';
+      if (pathname.includes('harmony-sans-sc')) {
+        newUrl.pathname = '/fonts/harmony-sans-sc/index.css';
+      } else {
+        newUrl.pathname = '/fonts/harmony-sans/index.css';
+      }
+      newUrl.port = '';
+      return NextResponse.redirect(newUrl);
+    }
+    
+    // Redirect KaTeX requests
+    if (pathname.includes('katex') && pathname.endsWith('/katex.min.css')) {
+      newUrl.hostname = request.headers.get('host') || 'localhost';
+      newUrl.pathname = '/fonts/katex/katex.min.css';
+      newUrl.port = '';
+      return NextResponse.redirect(newUrl);
+    }
+    
+    // Redirect emoji requests
+    if (pathname.includes('@lobehub/fluent-emoji-anim') && pathname.includes('/assets/')) {
+      const emojiFile = pathname.split('/assets/')[1];
+      newUrl.hostname = request.headers.get('host') || 'localhost';
+      newUrl.pathname = `/emojis/${emojiFile}`;
+      newUrl.port = '';
+      return NextResponse.redirect(newUrl);
+    }
+  }
+
   // skip all api requests
   if (backendApiEndpoints.some((path) => url.pathname.startsWith(path))) {
     logDefault('Skipping API request: %s', url.pathname);

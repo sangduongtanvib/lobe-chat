@@ -49,6 +49,15 @@ const nextConfig: NextConfig = {
             value: 'public, max-age=31536000, immutable',
           },
         ],
+        source: '/fonts/(.*).(woff|woff2|css)',
+      },
+      {
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
         source: '/icons/(.*).(png|jpe?g|gif|svg|ico|webp)',
       },
       {
@@ -113,6 +122,32 @@ const nextConfig: NextConfig = {
           },
         ],
         source: '/apple-touch-icon.png',
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      // Redirect CDN font requests to local fonts
+      {
+        destination: '/fonts/webfont-mono.css',
+        source: '/api/fonts/webfont-mono',
+      },
+      {
+        destination: '/fonts/harmony-sans/index.css', 
+        source: '/api/fonts/harmony-sans',
+      },
+      {
+        destination: '/fonts/harmony-sans-sc/index.css',
+        source: '/api/fonts/harmony-sans-sc', 
+      },
+      {
+        destination: '/fonts/katex/katex.min.css',
+        source: '/api/fonts/katex',
+      },
+      // Redirect emoji requests
+      {
+        destination: '/emojis/:path*',
+        source: '/api/emojis/:path*',
       },
     ];
   },

@@ -14,6 +14,9 @@ import Link from 'next/link';
 import { ReactNode, memo, useEffect } from 'react';
 
 import AntdStaticMethods from '@/components/AntdStaticMethods';
+import OfflineFontFallback from '@/components/OfflineFontFallback';
+import { useOfflineFontServiceWorker } from '@/hooks/useOfflineFontServiceWorker';
+import { initializeFontProxies } from '@/utils/fontProxy';
 import {
   LOBE_THEME_APPEARANCE,
   LOBE_THEME_NEUTRAL_COLOR,
@@ -102,6 +105,17 @@ const AppTheme = memo<AppThemeProps>(
     customFontURL,
     customFontFamily,
   }) => {
+    // Register offline font service worker
+    useOfflineFontServiceWorker();
+    
+    // Initialize font proxies for offline mode
+    useEffect(() => {
+      const isOfflineMode = process.env.NEXT_PUBLIC_CDN_USE_GLOBAL !== '1';
+      if (isOfflineMode) {
+        initializeFontProxies();
+      }
+    }, []);
+    
     // console.debug('server:appearance', defaultAppearance);
     // console.debug('server:primaryColor', defaultPrimaryColor);
     // console.debug('server:neutralColor', defaultNeutralColor);
@@ -145,16 +159,18 @@ const AppTheme = memo<AppThemeProps>(
         {!!customFontURL && <FontLoader url={customFontURL} />}
         <GlobalStyle />
         <AntdStaticMethods />
-        <ConfigProvider
-          config={{
-            aAs: Link,
-            imgAs: Image,
-            imgUnoptimized: true,
-            proxy: globalCDN ? 'unpkg' : undefined,
-          }}
-        >
-          {children}
-        </ConfigProvider>
+        <OfflineFontFallback>
+          <ConfigProvider
+            config={{
+              aAs: Link,
+              imgAs: Image,
+              imgUnoptimized: true,
+              proxy: globalCDN ? 'unpkg' : undefined,
+            }}
+          >
+            {children}
+          </ConfigProvider>
+        </OfflineFontFallback>
       </ThemeProvider>
     );
   },
