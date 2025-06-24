@@ -1,15 +1,6 @@
 #!/bin/bash
 
-# Script to create WAF        # Check if filename contains problematic characters
-        if echo "$filename" | grep -q -E '%5B|%5D|%40|\(|\)'; then
-            waf_name=$(waf_friendly_name "$filename")
-            
-            # For macOS compatibility, use a simpler approach
-            echo "🔗 Creating mapping: $waf_name"
-            
-            # Copy file to public/static/js with WAF-friendly name
-            cp "$file" "$PUBLIC_STATIC_DIR/js/$waf_name"
-        fisymlinks and update references for Next.js chunks
+# Script to create WAF-friendly symlinks and update references for Next.js chunks
 # Run this after `next build` to make chunk URLs accessible via WAF-friendly paths
 
 echo "🔧 Creating WAF-friendly URL mappings for Next.js build..."
@@ -45,12 +36,15 @@ create_mappings() {
         # Check if filename contains problematic characters
         if echo "$filename" | grep -q -E '%5B|%5D|%40|\(|\)'; then
             waf_name=$(waf_friendly_name "$filename")
-            relative_path=$(realpath --relative-to="$PUBLIC_STATIC_DIR/js" "$file")
             
-            echo "� Creating mapping: $waf_name -> $relative_path"
+            # Calculate relative path from public/static/js to the chunk file
+            # For macOS compatibility, use manual path calculation
+            chunks_relative_path="../../../$BUILD_DIR/static/chunks/$filename"
+            
+            echo "🔗 Creating mapping: $waf_name -> $chunks_relative_path"
             
             # Create symlink in public/static/js
-            ln -sf "$relative_path" "$PUBLIC_STATIC_DIR/js/$waf_name"
+            ln -sf "$chunks_relative_path" "$PUBLIC_STATIC_DIR/js/$waf_name"
         fi
     done
 }
