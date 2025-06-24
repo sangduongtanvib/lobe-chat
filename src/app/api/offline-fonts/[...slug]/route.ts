@@ -2,50 +2,55 @@
  * API route to serve offline fonts
  * This provides an additional layer to serve local fonts when CDN is not accessible
  */
-
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string[] } }
+  { params }: { params: Promise<{ slug: string[] }> },
 ) {
   try {
-    const slug = params.slug.join('/');
+    const resolvedParams = await params;
+    const slug = resolvedParams.slug.join('/');
     let filePath: string;
-    
+
     // Map font requests to local files
     switch (slug) {
-      case 'webfont-mono.css':
+      case 'webfont-mono.css': {
         filePath = path.join(process.cwd(), 'public/fonts/webfont-mono.css');
         break;
-      case 'harmony-sans.css':
+      }
+      case 'harmony-sans.css': {
         filePath = path.join(process.cwd(), 'public/fonts/harmony-sans/index.css');
         break;
-      case 'harmony-sans-sc.css':
+      }
+      case 'harmony-sans-sc.css': {
         filePath = path.join(process.cwd(), 'public/fonts/harmony-sans-sc/index.css');
         break;
-      case 'katex.css':
+      }
+      case 'katex.css': {
         filePath = path.join(process.cwd(), 'public/fonts/katex/katex.min.css');
         break;
-      default:
+      }
+      default: {
         return NextResponse.json({ error: 'Font not found' }, { status: 404 });
+      }
     }
-    
+
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ error: 'Font file not found' }, { status: 404 });
     }
-    
+
     // Read and serve the file
     const fileContent = fs.readFileSync(filePath, 'utf8');
-    
+
     return new NextResponse(fileContent, {
       headers: {
-        'Content-Type': 'text/css',
-        'Cache-Control': 'public, max-age=31536000, immutable',
         'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Content-Type': 'text/css',
       },
     });
   } catch (error) {

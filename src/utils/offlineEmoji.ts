@@ -6,9 +6,9 @@
 // Emoji mapping for offline usage
 export const OFFLINE_EMOJI_MAP = {
   // Waving hand
-  '👋': '/emojis/1f44b.webp',
   '1f44b': '/emojis/1f44b.webp',
-  
+  '👋': '/emojis/1f44b.webp',
+
   // Add more emojis as needed
   // Note: Only 1f44b.webp is successfully downloaded
 } as const;
@@ -42,12 +42,12 @@ export function getOfflineEmojiFallback(emojiCode: string): string {
   if (offlineUrl) {
     return offlineUrl;
   }
-  
+
   // Fallback to waving hand if available
   if (isEmojiAvailableOffline('1f44b')) {
     return OFFLINE_EMOJI_MAP['1f44b'];
   }
-  
+
   // Ultimate fallback to text emoji
   return '👋';
 }

@@ -4,6 +4,9 @@ import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
 import ReactComponentName from 'react-scan/react-component-name/webpack';
 
+// Import WAF HTML rewriter plugin
+const WAFHTMLRewriterPlugin = require('./src/utils/waf-html-rewriter-plugin');
+
 const isProd = process.env.NODE_ENV === 'production';
 const buildWithDocker = process.env.DOCKER === 'true';
 const isDesktop = process.env.NEXT_PUBLIC_IS_DESKTOP_APP === '1';
@@ -38,6 +41,9 @@ const nextConfig: NextConfig = {
     // so we need to disable it
     // refs: https://github.com/lobehub/lobe-chat/pull/7430
     serverMinification: false,
+    // Disable strict mode in production to avoid searchParams awaiting issues
+strictNextHead: false,
+    
     webVitalsAttribution: ['CLS', 'LCP'],
   },
   async headers() {
@@ -125,32 +131,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async rewrites() {
-    return [
-      // Redirect CDN font requests to local fonts
-      {
-        destination: '/fonts/webfont-mono.css',
-        source: '/api/fonts/webfont-mono',
-      },
-      {
-        destination: '/fonts/harmony-sans/index.css', 
-        source: '/api/fonts/harmony-sans',
-      },
-      {
-        destination: '/fonts/harmony-sans-sc/index.css',
-        source: '/api/fonts/harmony-sans-sc', 
-      },
-      {
-        destination: '/fonts/katex/katex.min.css',
-        source: '/api/fonts/katex',
-      },
-      // Redirect emoji requests
-      {
-        destination: '/emojis/:path*',
-        source: '/api/emojis/:path*',
-      },
-    ];
-  },
   logging: {
     fetches: {
       fullUrl: true,
@@ -229,6 +209,79 @@ const nextConfig: NextConfig = {
       source: '/repos',
     },
   ],
+  async rewrites() {
+    return [
+      // Redirect CDN font requests to local fonts
+      {
+        destination: '/fonts/webfont-mono.css',
+        source: '/api/fonts/webfont-mono',
+      },
+      {
+        destination: '/fonts/harmony-sans/index.css',
+        source: '/api/fonts/harmony-sans',
+      },
+      {
+        destination: '/fonts/harmony-sans-sc/index.css',
+        source: '/api/fonts/harmony-sans-sc',
+      },
+      {
+        destination: '/fonts/katex/katex.min.css',
+        source: '/api/fonts/katex',
+      },
+      // Redirect emoji requests
+      {
+        destination: '/emojis/:path*',
+        source: '/api/emojis/:path*',
+      },
+      // WAF-friendly Next.js static files rewrites - comprehensive coverage
+      {
+        destination: '/_next/static/chunks/:path*',
+        source: '/static/js/:path*',
+      },
+      {
+        destination: '/_next/static/css/:path*',
+        source: '/static/css/:path*',
+      },
+      {
+        destination: '/_next/static/media/:path*',
+        source: '/static/media/:path*',
+      },
+      {
+        destination: '/_next/static/:path*',
+        source: '/nextjs-static/:path*',
+      },
+      // Rewrite Next.js chunks with special characters to avoid WAF blocking
+      {
+        destination: '/_next/static/chunks/:path*',
+        source: '/nextjs-chunks/:path*',
+      },
+      // Handle safe-chunks pattern for WAF-friendly URLs
+      {
+        destination: '/_next/static/chunks/:path*',
+        source: '/safe-chunks/:path*',
+      },
+      {
+        destination: '/_next/static/chunks/:path*',
+        source: '/js-chunks/:path*',
+      },
+      // General WAF-safe patterns for any static file with encoded characters
+      {
+        destination: '/_next/static/:path*',
+        source: '/waf-safe/:path*',
+      },
+      // Enhanced WAF-friendly URL rewrites for development mode
+      // Handle encoded brackets in chunk URLs
+      {
+        destination: '/_next/static/chunks/:path*',
+        source: '/static/js/:path*',
+      },
+      // Handle app router chunks with variant patterns
+      {
+        destination: '/_next/static/chunks/app/v/%5Bvariant%5D/:path*',
+        source: '/app-chunks/variant/:path*',
+      },
+    ];
+  },
   // when external packages in dev mode with turbopack, this config will lead to bundle error
   serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
 
@@ -239,6 +292,16 @@ const nextConfig: NextConfig = {
       asyncWebAssembly: true,
       layers: true,
     };
+
+    // Add WAF HTML rewriter plugin for development mode
+    if (!isProd) {
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new WAFHTMLRewriterPlugin({
+          development: true,
+        }),
+      );
+    }
 
     // 开启该插件会导致 pglite 的 fs bundler 被改表
     if (enableReactScan && !isUsePglite) {
@@ -277,10 +340,10 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true' ? analyzer() : noWrapp
 const withPWA =
   isProd && !isDesktop
     ? withSerwistInit({
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         register: false,
         swDest: 'public/sw.js',
-        swSrc: 'src/app/sw.ts',
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB limit for files to cache
+        swSrc: 'src/app/sw.ts', // 10MB limit for files to cache
       })
     : noWrapper;
 

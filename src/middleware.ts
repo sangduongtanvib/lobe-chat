@@ -13,6 +13,7 @@ import { Locales } from '@/locales/resources';
 import { parseBrowserLanguage } from '@/utils/locale';
 import { parseDefaultThemeFromCountry } from '@/utils/server/geo';
 import { RouteVariants } from '@/utils/server/routeVariants';
+import { handleWAFFriendlyChunks } from '@/utils/waf-chunk-handler';
 
 import { OAUTH_AUTHORIZED } from './const/auth';
 import { oidcEnv } from './envs/oidc';
@@ -29,6 +30,15 @@ export const config = {
   matcher: [
     // include any files in the api or trpc folders that might have an extension
     '/(api|trpc|webapi)(.*)',
+    // WAF-friendly static file paths - comprehensive coverage
+    '/static/js/(.*)',
+    '/static/css/(.*)',
+    '/static/media/(.*)',
+    '/nextjs-static/(.*)',
+    '/nextjs-chunks/(.*)',
+    '/js-chunks/(.*)',
+    '/safe-chunks/(.*)',
+    '/waf-safe/(.*)',
     // include the /
     '/',
     '/discover',
@@ -59,11 +69,45 @@ const defaultMiddleware = (request: NextRequest) => {
   const url = new URL(request.url);
   logDefault('Processing request: %s %s', request.method, request.url);
 
+  // Skip middleware for variant routes to prevent double rewriting
+  if (url.pathname.startsWith('/v/') && url.pathname.includes('__')) {
+    logDefault('Skipping middleware for variant route: %s', url.pathname);
+    return NextResponse.next();
+  }
+
+  // Handle WAF-friendly static chunks first
+  const wafResponse = handleWAFFriendlyChunks(request);
+  if (wafResponse) {
+    logDefault('Served WAF-friendly chunk: %s', url.pathname);
+    return wafResponse;
+  }
+
+  // Handle WAF-friendly static files rewrite - comprehensive coverage
+  const wafFriendlyPaths = [
+    { path: '/static/js/', target: '/_next/static/chunks/' },
+    { path: '/static/css/', target: '/_next/static/css/' },
+    { path: '/static/media/', target: '/_next/static/media/' },
+    { path: '/nextjs-static/', target: '/_next/static/' },
+    { path: '/nextjs-chunks/', target: '/_next/static/chunks/' },
+    { path: '/js-chunks/', target: '/_next/static/chunks/' },
+    { path: '/safe-chunks/', target: '/_next/static/chunks/' },
+    { path: '/waf-safe/', target: '/_next/static/' },
+  ];
+
+  const matchedWafPath = wafFriendlyPaths.find(({ path }) => url.pathname.startsWith(path));
+
+  if (matchedWafPath) {
+    const originalPath = url.pathname.replace(matchedWafPath.path, matchedWafPath.target);
+    url.pathname = originalPath;
+    logDefault('Rewriting WAF-friendly static file: %s -> %s', request.url, url.pathname);
+    return NextResponse.rewrite(url);
+  }
+
   // Intercept CDN font requests and redirect to local fonts
   if (url.hostname === 'registry.npmmirror.com') {
     const pathname = url.pathname;
     const newUrl = new URL(url);
-    
+
     // Redirect webfont-mono requests
     if (pathname.includes('@lobehub/webfont-mono') && pathname.endsWith('/css/index.css')) {
       newUrl.hostname = request.headers.get('host') || 'localhost';
@@ -71,7 +115,7 @@ const defaultMiddleware = (request: NextRequest) => {
       newUrl.port = '';
       return NextResponse.redirect(newUrl);
     }
-    
+
     // Redirect harmony-sans requests
     if (pathname.includes('@lobehub/webfont-harmony-sans') && pathname.endsWith('/css/index.css')) {
       newUrl.hostname = request.headers.get('host') || 'localhost';
@@ -83,7 +127,7 @@ const defaultMiddleware = (request: NextRequest) => {
       newUrl.port = '';
       return NextResponse.redirect(newUrl);
     }
-    
+
     // Redirect KaTeX requests
     if (pathname.includes('katex') && pathname.endsWith('/katex.min.css')) {
       newUrl.hostname = request.headers.get('host') || 'localhost';
@@ -91,7 +135,7 @@ const defaultMiddleware = (request: NextRequest) => {
       newUrl.port = '';
       return NextResponse.redirect(newUrl);
     }
-    
+
     // Redirect emoji requests
     if (pathname.includes('@lobehub/fluent-emoji-anim') && pathname.includes('/assets/')) {
       const emojiFile = pathname.split('/assets/')[1];

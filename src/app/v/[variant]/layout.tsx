@@ -6,6 +6,7 @@ import { ReactNode } from 'react';
 import { isRtlLang } from 'rtl-detect';
 
 import Analytics from '@/components/Analytics';
+import WAFChunkInterceptor from '@/components/WAFChunkInterceptor';
 import { DEFAULT_LANG } from '@/const/locale';
 import { isDesktop } from '@/const/version';
 import PWAInstall from '@/features/PWAInstall';
@@ -13,6 +14,7 @@ import AuthProvider from '@/layout/AuthProvider';
 import GlobalProvider from '@/layout/GlobalProvider';
 import { Locales } from '@/locales/resources';
 import { DynamicLayoutProps } from '@/types/next';
+import '@/utils/next15-compat';
 import { RouteVariants } from '@/utils/server/routeVariants';
 
 const inVercel = process.env.VERCEL === '1';
@@ -32,6 +34,27 @@ const RootLayout = async ({ children, params, modal }: RootLayoutProps) => {
 
   return (
     <html dir={direction} lang={locale} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Register WAF Service Worker
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/waf-sw.js')
+                    .then(function(registration) {
+                      console.log('WAF SW: Registration successful', registration.scope);
+                    })
+                    .catch(function(error) {
+                      console.log('WAF SW: Registration failed', error);
+                    });
+                });
+              }
+            `,
+          }}
+        />
+        <WAFChunkInterceptor />
+      </head>
       <body>
         <NuqsAdapter>
           <GlobalProvider
