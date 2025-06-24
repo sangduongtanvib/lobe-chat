@@ -25,7 +25,6 @@ const nextConfig: NextConfig = {
   basePath,
   compress: isProd,
 
-  
   experimental: {
     optimizePackageImports: [
       'emoji-mart',
@@ -42,8 +41,8 @@ const nextConfig: NextConfig = {
     serverMinification: false,
     webVitalsAttribution: ['CLS', 'LCP'],
   },
-  
-async headers() {
+
+  async headers() {
     return [
       {
         headers: [
@@ -119,17 +118,17 @@ async headers() {
       },
     ];
   },
-  
-logging: {
+
+  logging: {
     fetches: {
       fullUrl: true,
       hmrRefreshes: true,
     },
   },
-  
-reactStrictMode: true,
-  
-redirects: async () => [
+
+  reactStrictMode: true,
+
+  redirects: async () => [
     {
       destination: '/sitemap-index.xml',
       permanent: true,
@@ -200,13 +199,26 @@ redirects: async () => [
       source: '/repos',
     },
   ],
-  
-// when external packages in dev mode with turbopack, this config will lead to bundle error
-serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
-  
 
-skipMiddlewareUrlNormalize: false,
   
+  rewrites: async () => [
+    // Rewrite dynamic routes static files
+    {
+      destination: '/_next/static/chunks/app/:path*%5B$1%5D$2',
+      source: '/_next/static/chunks/app/:path*\\[(.*)\\](.*)$',
+    },
+    {
+      destination: '/_next/static/chunks/app/$1%5B$2%5D$3',
+      source: '/_next/static/chunks/app/(.*)\\[(.*)\\](.*)$',
+    },
+  ],
+
+  // when external packages in dev mode with turbopack, this config will lead to bundle error
+serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
+
+  
+  skipMiddlewareUrlNormalize: false,
+
   // Handle URL encoding issues for special characters
 trailingSlash: false,
 
@@ -217,6 +229,81 @@ trailingSlash: false,
       asyncWebAssembly: true,
       layers: true,
     };
+
+    // Plugin to handle special characters encoding in chunk files for WAF compatibility
+    // Only in production to avoid memory issues in development
+    if (isProd) {
+      config.plugins.push({
+        apply: (compiler: any) => {
+          compiler.hooks.emit.tapAsync('WAFCompatibleChunks', (compilation: any, callback: any) => {
+            try {
+              const assets = compilation.assets;
+              let renamedCount = 0;
+
+              // Define safe character replacements (WAF-friendly)
+              // Using direct replacement for better performance
+
+              // Pre-filter files to avoid memory issues
+              const filesToProcess = Object.keys(assets).filter((filename) => {
+                // Quick check for problematic characters
+                const hasProblematicChars =
+                  filename.includes('[') ||
+                  filename.includes(']') ||
+                  filename.includes('(') ||
+                  filename.includes(')') ||
+                  filename.includes('@');
+
+                // Process all problematic files that could be web-accessible
+                return (
+                  hasProblematicChars &&
+                  (filename.includes('/chunks/app/') ||
+                    filename.startsWith('static/chunks/app/') ||
+                    filename.includes('/types/app/') ||
+                    filename.includes('/chunks/[turbopack]') ||
+                    filename.includes('static/chunks/[turbopack]') ||
+                    filename.includes('/server/edge/chunks/') ||
+                    filename.includes('/static/chunks/') ||
+                    filename.includes('/chunks/src_app_v_') ||
+                    filename.includes('static/chunks/src_app_v_') ||
+                    (filename.includes('/chunks/') && filename.endsWith('.js')) ||
+                    (filename.includes('/chunks/') && filename.endsWith('.js.map')))
+                );
+              });
+
+              // Process files in smaller batches to prevent memory issues
+              for (const filename of filesToProcess) {
+                let newFilename = filename;
+
+                // Safe character replacement (WAF-friendly)
+                newFilename = newFilename
+                  .replaceAll('[', '__OPEN__')
+                  .replaceAll(']', '__CLOSE__')
+                  .replaceAll('(', '__LP__')
+                  .replaceAll(')', '__RP__')
+                  .replaceAll('@', '__AT__');
+
+                // Only rename if actually changed and avoid duplicates
+                if (newFilename !== filename && !assets[newFilename]) {
+                  assets[newFilename] = assets[filename];
+                  delete assets[filename];
+                  renamedCount++;
+                }
+              }
+
+              // Log summary
+              if (renamedCount > 0) {
+                console.log(`🔒 WAF Fixed ${renamedCount} chunk files for special characters`);
+              }
+
+              callback();
+            } catch (error) {
+              console.error('❌ WAF Plugin Error:', error);
+              callback(error);
+            }
+          });
+        },
+      });
+    }
 
     // 开启该插件会导致 pglite 的 fs bundler 被改表
     if (enableReactScan && !isUsePglite) {
