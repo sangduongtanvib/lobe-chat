@@ -46,6 +46,16 @@ test-output
 
 # local env files
 .env*.local
+.env
+
+# Security sensitive files
+*test*.js
+*debug*.js
+vertex-ai-key.json
+*.key
+*.pem
+*.p12
+*.p8
 
 # vercel
 .vercel

@@ -40,6 +40,9 @@ importers:
       '@azure/core-auth':
         specifier: ^1.9.0
         version: 1.9.0
+      '@azure/storage-blob':
+        specifier: ^12.27.0
+        version: 12.27.0
       '@cfworker/json-schema':
         specifier: ^4.1.1
         version: 4.1.1
@@ -57,7 +60,7 @@ importers:
         version: 2.2.46
       '@clerk/types':
         specifier: ^4.59.2
-        version: 4.59.2
+        version: 4.60.0
       '@codesandbox/sandpack-react':
         specifier: ^2.20.0
         version: 2.20.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -84,7 +87,7 @@ importers:
         version: 0.3.9
       '@langchain/community':
         specifier: ^0.3.43
-        version: 0.3.43(65580867468513970d1fc07c9e5a823c)
+        version: 0.3.43(1c37aee8cda713c8217e30a2cb2e73a8)
       '@lobechat/electron-client-ipc':
         specifier: workspace:*
         version: link:packages/electron-client-ipc
@@ -487,13 +490,13 @@ importers:
         version: 0.15.9
       '@lobehub/i18n-cli':
         specifier: ^1.20.3
-        version: 1.20.3(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.26.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@types/react@19.1.4)(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(immer@10.1.1)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(typescript@5.8.3)(ws@8.18.2)
+        version: 1.20.3(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.27.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@types/react@19.1.4)(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(immer@10.1.1)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(typescript@5.8.3)(ws@8.18.2)
       '@lobehub/lint':
         specifier: ^1.26.1
         version: 1.26.1(@octokit/core@5.2.1)(@vue/compiler-sfc@3.5.14)(encoding@0.1.13)(eslint@8.57.1)(postcss@8.5.3)(prettier@3.5.3)(semantic-release@21.1.2(typescript@5.8.3))(stylelint@15.11.0(typescript@5.8.3))(svelte@5.32.1)(typescript@5.8.3)
       '@lobehub/seo-cli':
         specifier: ^1.4.3
-        version: 1.4.3(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.26.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@types/react@19.1.4)(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(immer@10.1.1)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(typescript@5.8.3)(ws@8.18.2)
+        version: 1.4.3(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.27.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@types/react@19.1.4)(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(immer@10.1.1)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(typescript@5.8.3)(ws@8.18.2)
       '@next/bundle-analyzer':
         specifier: ^15.3.2
         version: 15.3.2
@@ -733,7 +736,7 @@ importers:
     dependencies:
       '@langchain/community':
         specifier: ^0.3.41
-        version: 0.3.43(65580867468513970d1fc07c9e5a823c)
+        version: 0.3.43(1c37aee8cda713c8217e30a2cb2e73a8)
       '@langchain/core':
         specifier: ^0.3.45
         version: 0.3.56(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))
@@ -1300,6 +1303,10 @@ packages:
     resolution: {integrity: sha512-SriLPKezypIsiZ+TtlFfE46uuBIap2HeaQVS78e1P7rz5OSbq0rsd52WE1mC5f7vAeLiXqv7I7oRhL3WFZEw3Q==}
     engines: {node: '>=18.0.0'}
 
+  '@azure/storage-blob@12.27.0':
+    resolution: {integrity: sha512-IQjj9RIzAKatmNca3D6bT0qJ+Pkox1WZGOg2esJF2YLHb45pQKOwGPIAV+w3rfgkj7zV3RMxpn/c6iftzSOZJQ==}
+    engines: {node: '>=18.0.0'}
+
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
     engines: {node: '>=6.9.0'}
@@ -1509,10 +1516,6 @@ packages:
 
   '@clerk/themes@2.2.46':
     resolution: {integrity: sha512-Zw9SIMFYLmYr9mNqVLXvPgUE8sPKL5oz2xGi37HnJRpUud/aUifEZ1mihRv158vAga2HmJHptAxwAmmKhHVymA==}
-    engines: {node: '>=18.17.0'}
-
-  '@clerk/types@4.59.2':
-    resolution: {integrity: sha512-PO16hwdpwnZZMJu5BN69v8gqBnK5mfJkcHK3k5XymsPG9t+rply2K5fyP43+HoNkxluufk6SObDmY9NTzd+lKw==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/types@4.60.0':
@@ -15872,6 +15875,24 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@azure/storage-blob@12.27.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.9.0
+      '@azure/core-client': 1.9.4
+      '@azure/core-http-compat': 2.3.0
+      '@azure/core-lro': 2.7.2
+      '@azure/core-paging': 1.6.2
+      '@azure/core-rest-pipeline': 1.20.0
+      '@azure/core-tracing': 1.2.0
+      '@azure/core-util': 1.12.0
+      '@azure/core-xml': 1.4.5
+      '@azure/logger': 1.2.0
+      events: 3.3.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/code-frame@7.27.1':
     dependencies:
       '@babel/helper-validator-identifier': 7.27.1
@@ -16130,21 +16151,21 @@ snapshots:
   '@clerk/clerk-react@5.31.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@clerk/shared': 3.9.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@clerk/types': 4.59.2
+      '@clerk/types': 4.60.0
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       tslib: 2.8.1
 
   '@clerk/localizations@3.16.1':
     dependencies:
-      '@clerk/types': 4.59.2
+      '@clerk/types': 4.60.0
 
   '@clerk/nextjs@6.19.5(next@15.3.2(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(svix@1.65.0(encoding@0.1.13))':
     dependencies:
       '@clerk/backend': 1.34.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(svix@1.65.0(encoding@0.1.13))
       '@clerk/clerk-react': 5.31.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@clerk/shared': 3.9.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@clerk/types': 4.59.2
+      '@clerk/types': 4.60.0
       next: 15.3.2(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
@@ -16155,7 +16176,7 @@ snapshots:
 
   '@clerk/shared@3.9.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@clerk/types': 4.59.2
+      '@clerk/types': 4.60.0
       dequal: 2.0.3
       glob-to-regexp: 0.4.1
       js-cookie: 3.0.5
@@ -16179,12 +16200,8 @@ snapshots:
 
   '@clerk/themes@2.2.46':
     dependencies:
-      '@clerk/types': 4.59.2
+      '@clerk/types': 4.60.0
       tslib: 2.8.1
-
-  '@clerk/types@4.59.2':
-    dependencies:
-      csstype: 3.1.3
 
   '@clerk/types@4.60.0':
     dependencies:
@@ -17430,7 +17447,7 @@ snapshots:
       koa-compose: 4.1.0
       path-to-regexp: 6.3.0
 
-  '@langchain/community@0.3.43(65580867468513970d1fc07c9e5a823c)':
+  '@langchain/community@0.3.43(1c37aee8cda713c8217e30a2cb2e73a8)':
     dependencies:
       '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.52.0)(deepmerge@4.3.1)(dotenv@16.5.0)(encoding@0.1.13)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(zod@3.25.12)
       '@ibm-cloud/watsonx-ai': 1.6.6
@@ -17452,7 +17469,7 @@ snapshots:
       '@aws-sdk/client-bedrock-runtime': 3.812.0
       '@aws-sdk/client-s3': 3.812.0
       '@aws-sdk/credential-provider-node': 3.812.0
-      '@azure/storage-blob': 12.26.0
+      '@azure/storage-blob': 12.27.0
       '@browserbasehq/sdk': 2.6.0(encoding@0.1.13)
       '@google-cloud/storage': 7.16.0(encoding@0.1.13)
       '@huggingface/inference': 2.8.1
@@ -17699,7 +17716,7 @@ snapshots:
       - framer-motion
       - supports-color
 
-  '@lobehub/i18n-cli@1.20.3(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.26.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@types/react@19.1.4)(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(immer@10.1.1)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(typescript@5.8.3)(ws@8.18.2)':
+  '@lobehub/i18n-cli@1.20.3(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.27.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@types/react@19.1.4)(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(immer@10.1.1)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(typescript@5.8.3)(ws@8.18.2)':
     dependencies:
       '@inkjs/ui': 1.0.0(ink@4.4.1(@types/react@19.1.4)(react@19.1.0))
       '@langchain/core': 0.2.36(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))
@@ -17719,7 +17736,7 @@ snapshots:
       ink: 4.4.1(@types/react@19.1.4)(react@18.3.1)
       json-stable-stringify: 1.3.0
       just-diff: 6.0.2
-      langchain: 0.2.20(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.26.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(ws@8.18.2)
+      langchain: 0.2.20(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.27.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(ws@8.18.2)
       lodash-es: 4.17.21
       p-map: 7.0.3
       pangu: 4.0.7
@@ -17845,9 +17862,9 @@ snapshots:
       '@umijs/lint': 4.4.11(eslint@8.57.1)(postcss-less@6.0.0(postcss@8.5.3))(stylelint@15.11.0(typescript@5.8.3))(typescript@5.8.3)
       commitlint-config-gitmoji: 2.3.1
       eslint-config-prettier: 9.1.0(eslint@8.57.1)
-      eslint-import-resolver-alias: 1.1.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1))
+      eslint-import-resolver-alias: 1.1.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1)
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@7.5.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)(typescript@5.8.3)
       eslint-plugin-react: 7.37.5(eslint@8.57.1)
       eslint-plugin-react-hooks: 4.6.2(eslint@8.57.1)
@@ -17924,7 +17941,7 @@ snapshots:
       - typescript
       - vue-tsc
 
-  '@lobehub/seo-cli@1.4.3(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.26.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@types/react@19.1.4)(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(immer@10.1.1)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(typescript@5.8.3)(ws@8.18.2)':
+  '@lobehub/seo-cli@1.4.3(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.27.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@types/react@19.1.4)(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(immer@10.1.1)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(typescript@5.8.3)(ws@8.18.2)':
     dependencies:
       '@inkjs/ui': 1.0.0(ink@4.4.1(@types/react@19.1.4)(react@19.1.0))
       '@langchain/core': 0.2.36(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))
@@ -17943,7 +17960,7 @@ snapshots:
       ink: 4.4.1(@types/react@19.1.4)(react@18.3.1)
       json-stable-stringify: 1.3.0
       just-diff: 6.0.2
-      langchain: 0.2.20(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.26.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(ws@8.18.2)
+      langchain: 0.2.20(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.27.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(ws@8.18.2)
       lodash-es: 4.17.21
       p-map: 7.0.3
       pangu: 4.0.7
@@ -23335,9 +23352,9 @@ snapshots:
     dependencies:
       eslint: 8.57.1
 
-  eslint-import-resolver-alias@1.1.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)):
+  eslint-import-resolver-alias@1.1.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)):
     dependencies:
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
 
   eslint-import-resolver-node@0.3.9:
     dependencies:
@@ -23358,7 +23375,7 @@ snapshots:
       tinyglobby: 0.2.13
       unrs-resolver: 1.7.2
     optionalDependencies:
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -23396,7 +23413,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.5.0(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.8
@@ -25528,7 +25545,7 @@ snapshots:
 
   ky@1.8.1: {}
 
-  langchain@0.2.20(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.26.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(ws@8.18.2):
+  langchain@0.2.20(@aws-sdk/client-s3@3.812.0)(@aws-sdk/credential-provider-node@3.812.0)(@azure/storage-blob@12.27.0)(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(axios@1.9.0(debug@4.4.1))(encoding@0.1.13)(epub2@3.0.2(ts-toolbelt@9.6.0))(fast-xml-parser@5.2.3)(handlebars@4.7.8)(html-to-text@9.0.5)(ignore@5.3.2)(mammoth@1.9.0)(officeparser@5.1.1)(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))(pdf-parse@1.1.1)(playwright@1.52.0)(ws@8.18.2):
     dependencies:
       '@langchain/core': 0.2.36(openai@4.100.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.12))
       '@langchain/openai': 0.2.11(encoding@0.1.13)(ws@8.18.2)
@@ -25547,7 +25564,7 @@ snapshots:
     optionalDependencies:
       '@aws-sdk/client-s3': 3.812.0
       '@aws-sdk/credential-provider-node': 3.812.0
-      '@azure/storage-blob': 12.26.0
+      '@azure/storage-blob': 12.27.0
       '@browserbasehq/sdk': 2.6.0(encoding@0.1.13)
       axios: 1.9.0(debug@4.4.1)
       epub2: 3.0.2(ts-toolbelt@9.6.0)

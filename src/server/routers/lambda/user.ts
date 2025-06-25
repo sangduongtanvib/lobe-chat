@@ -13,7 +13,7 @@ import { LobeNextAuthDbAdapter } from '@/libs/next-auth/adapter';
 import { authedProcedure, router } from '@/libs/trpc/lambda';
 import { serverDatabase } from '@/libs/trpc/lambda/middleware';
 import { KeyVaultsGateKeeper } from '@/server/modules/KeyVaultsEncrypt';
-import { S3 } from '@/server/modules/S3';
+import { storageService } from '@/server/modules/Storage';
 import { FileService } from '@/server/services/file';
 import { UserService } from '@/server/services/user';
 import {
@@ -151,7 +151,7 @@ export const userRouter = router({
 
   // 服务端上传头像
   updateAvatar: userProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
-    // 如果是 Base64 数据，需要上传到 S3
+    // 如果是 Base64 数据，需要上传到 Storage (S3 或 Azure Storage)
     if (input.startsWith('data:image')) {
       try {
         // 提取 mimeType，例如 "image/png"
@@ -168,9 +168,6 @@ export const userRouter = router({
         }
         const base64Data = input.slice(commaIndex + 1);
 
-        // 创建 S3 客户端
-        const s3 = new S3();
-
         // 使用 UUID 生成唯一文件名，防止缓存问题
         // 获取旧头像 URL, 后面删除该头像
         const userState = await ctx.userModel.getUserState(KeyVaultsGateKeeper.getUserKeyVaults);
@@ -179,15 +176,15 @@ export const userRouter = router({
         const fileName = `${uuidv4()}.${fileType}`;
         const filePath = `user/avatar/${ctx.userId}/${fileName}`;
 
-        // 将 Base64 数据转换为 Buffer 再上传到 S3
+        // 将 Base64 数据转换为 Buffer 再上传到 Storage
         const buffer = Buffer.from(base64Data, 'base64');
 
-        await s3.uploadBuffer(filePath, buffer, mimeType);
+        await storageService.uploadBuffer(filePath, buffer, mimeType);
 
         // 删除旧头像
         if (oldAvatarUrl && oldAvatarUrl.startsWith('/webapi/')) {
           const oldFilePath = oldAvatarUrl.replace('/webapi/', '');
-          await s3.deleteFile(oldFilePath);
+          await storageService.deleteFile(oldFilePath);
         }
 
         const avatarUrl = '/webapi/' + filePath;

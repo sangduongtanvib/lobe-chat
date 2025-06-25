@@ -10,6 +10,8 @@ import { z } from 'zod';
 
 import { fileEnv } from '@/config/file';
 
+import { StorageInterface } from '../Storage';
+
 export const fileSchema = z.object({
   Key: z.string(),
   LastModified: z.date(),
@@ -22,7 +24,7 @@ export type FileType = z.infer<typeof fileSchema>;
 
 const DEFAULT_S3_REGION = 'us-east-1';
 
-export class S3 {
+export class S3 implements StorageInterface {
   private readonly client: S3Client;
 
   private readonly bucket: string;

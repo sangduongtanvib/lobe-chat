@@ -54,9 +54,9 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
   ) {
     // Convert WAF-friendly back to original filename using comprehensive mapping
     const originalFilename = requestedFile
-      .replaceAll('_OB_', '[')
-      .replaceAll('_CB_', ']')
-      .replaceAll('_AT_', '@')
+      .replaceAll('_OB_', '%5B')
+      .replaceAll('_CB_', '%5D')
+      .replaceAll('_AT_', '%40')
       .replaceAll('_OP_', '(')
       .replaceAll('_CP_', ')')
       .replaceAll('_PCT_', '%')
@@ -75,9 +75,9 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
       .replaceAll('_LT_', '<')
       .replaceAll('_GT_', '>');
 
-    // Rewrite to the original static path with proper URL encoding
+    // Rewrite to the original static path (already properly encoded)
     const rewriteUrl = new URL(request.url);
-    rewriteUrl.pathname = `${matchedPath.target}${encodeURI(originalFilename)}`;
+    rewriteUrl.pathname = `${matchedPath.target}${originalFilename}`;
 
     console.log('WAF Handler: Rewriting WAF-safe chunk', url.pathname, '->', rewriteUrl.pathname);
     return NextResponse.rewrite(rewriteUrl);
@@ -100,6 +100,36 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
 
       console.log(
         'WAF Handler: Rewriting app variant chunk',
+        url.pathname,
+        '->',
+        rewriteUrl.pathname,
+      );
+      return NextResponse.rewrite(rewriteUrl);
+    }
+  }
+
+  // Handle complex app variant patterns (like app/v/[Variant]/(main)/files/(content)/@menu/default-{hash}/js)
+  if (matchedPath.path === '/static/js/' && requestedFile.startsWith('app/v/')) {
+    // Pattern: app/v/%5BVariant%5D/(main)/files/(content)/@menu/default-{hash}/js
+    // Note: case-insensitive matching for variant names
+    const complexPattern =
+      /^app\/v\/(%5b[^%]+%5d)\/\(main\)\/([^/]+)\/\(([^)]+)\)\/@([^/]+)\/([^/]+)-([^/]+)\/js$/i;
+    const match = requestedFile.match(complexPattern);
+
+    if (match) {
+      const [, variantEncoded, section, contentType, menuType, prefix, hash] = match;
+      // Convert %5BVariant%5D back to %5Bvariant%5D (lowercase) to match actual chunks
+      const variant = variantEncoded.replace('%5B', '').replace('%5D', '').toLowerCase();
+
+      // Reconstruct the original Next.js chunk filename with proper path structure
+      // Pattern: app/v/%5B{variant}%5D/(main)/{section}/({contentType})/%40{menuType}/{prefix}-{hash}.js
+      const originalFilename = `app/v/%5B${variant}%5D/(main)/${section}/(${contentType})/%40${menuType}/${prefix}-${hash}.js`;
+
+      const rewriteUrl = new URL(request.url);
+      rewriteUrl.pathname = `/_next/static/chunks/${originalFilename}`;
+
+      console.log(
+        'WAF Handler: Rewriting complex app variant pattern',
         url.pathname,
         '->',
         rewriteUrl.pathname,

@@ -81,30 +81,30 @@ describe('S3StaticFileImpl', () => {
   });
 
   describe('deleteFile', () => {
-    it('应该调用S3的deleteFile方法', async () => {
+    it('应该调用Storage的deleteFile方法', async () => {
       await fileService.deleteFile('test.jpg');
-      expect(fileService['s3'].deleteFile).toHaveBeenCalledWith('test.jpg');
+      expect(fileService['storage'].deleteFile).toHaveBeenCalledWith('test.jpg');
     });
   });
 
   describe('deleteFiles', () => {
-    it('应该调用S3的deleteFiles方法', async () => {
+    it('应该调用Storage的deleteFiles方法', async () => {
       await fileService.deleteFiles(['test1.jpg', 'test2.jpg']);
-      expect(fileService['s3'].deleteFiles).toHaveBeenCalledWith(['test1.jpg', 'test2.jpg']);
+      expect(fileService['storage'].deleteFiles).toHaveBeenCalledWith(['test1.jpg', 'test2.jpg']);
     });
   });
 
   describe('createPreSignedUrl', () => {
-    it('应该调用S3的createPreSignedUrl方法', async () => {
+    it('应该调用Storage的createPreSignedUrl方法', async () => {
       const result = await fileService.createPreSignedUrl('test.jpg');
       expect(result).toBe('https://upload.example.com/test.jpg');
     });
   });
 
   describe('uploadContent', () => {
-    it('应该调用S3的uploadContent方法', async () => {
+    it('应该调用Storage的uploadContent方法', async () => {
       await fileService.uploadContent('test.jpg', 'content');
-      expect(fileService['s3'].uploadContent).toHaveBeenCalledWith('test.jpg', 'content');
+      expect(fileService['storage'].uploadContent).toHaveBeenCalledWith('test.jpg', 'content');
     });
   });
 });

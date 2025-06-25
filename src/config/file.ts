@@ -21,6 +21,13 @@ export const getFileConfig = () => {
       NEXT_PUBLIC_S3_FILE_PATH: z.string().optional(),
     },
     runtimeEnv: {
+      AZURE_BLOB_CONNECTION_STRING: process.env.AZURE_BLOB_CONNECTION_STRING,
+      AZURE_BLOB_CONTAINER_NAME: process.env.AZURE_BLOB_CONTAINER_NAME,
+      AZURE_STORAGE_ACCOUNT_KEY: process.env.AZURE_STORAGE_ACCOUNT_KEY,
+      AZURE_STORAGE_ACCOUNT_NAME: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+      AZURE_STORAGE_CONTAINER_NAME: process.env.AZURE_STORAGE_CONTAINER_NAME,
+      AZURE_STORAGE_SAS_TOKEN: process.env.AZURE_STORAGE_SAS_TOKEN,
+
       CHUNKS_AUTO_EMBEDDING: process.env.CHUNKS_AUTO_EMBEDDING !== '0',
       CHUNKS_AUTO_GEN_METADATA: process.env.CHUNKS_AUTO_GEN_METADATA !== '0',
 
@@ -36,8 +43,19 @@ export const getFileConfig = () => {
       S3_REGION: process.env.S3_REGION,
       S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
       S3_SET_ACL: process.env.S3_SET_ACL !== '0',
+
+      // Storage provider selection
+      STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || 's3', // 's3' or 'azure'
     },
     server: {
+      // Azure Storage
+      AZURE_BLOB_CONNECTION_STRING: z.string().optional(),
+      AZURE_BLOB_CONTAINER_NAME: z.string().optional(),
+      AZURE_STORAGE_ACCOUNT_KEY: z.string().optional(),
+      AZURE_STORAGE_ACCOUNT_NAME: z.string().optional(),
+      AZURE_STORAGE_CONTAINER_NAME: z.string().optional(),
+      AZURE_STORAGE_SAS_TOKEN: z.string().optional(),
+
       CHUNKS_AUTO_EMBEDDING: z.boolean(),
       CHUNKS_AUTO_GEN_METADATA: z.boolean(),
 
@@ -45,13 +63,15 @@ export const getFileConfig = () => {
       S3_ACCESS_KEY_ID: z.string().optional(),
       S3_BUCKET: z.string().optional(),
       S3_ENABLE_PATH_STYLE: z.boolean(),
-
       S3_ENDPOINT: z.string().url().optional(),
       S3_PREVIEW_URL_EXPIRE_IN: z.number(),
       S3_PUBLIC_DOMAIN: z.string().url().optional(),
       S3_REGION: z.string().optional(),
       S3_SECRET_ACCESS_KEY: z.string().optional(),
       S3_SET_ACL: z.boolean(),
+
+      // Storage provider selection
+      STORAGE_PROVIDER: z.enum(['s3', 'azure']).default('s3'),
     },
   });
 };

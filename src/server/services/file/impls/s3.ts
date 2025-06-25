@@ -1,56 +1,57 @@
 import urlJoin from 'url-join';
 
 import { fileEnv } from '@/config/file';
-import { S3 } from '@/server/modules/S3';
+import { StorageInterface, storageService } from '@/server/modules/Storage';
 
 import { FileServiceImpl } from './type';
 
 /**
- * 基于S3的文件服务实现
+ * 基于Storage的文件服务实现 (支持S3和Azure Storage)
  */
 export class S3StaticFileImpl implements FileServiceImpl {
-  private readonly s3: S3;
+  private readonly storage: StorageInterface;
 
   constructor() {
-    this.s3 = new S3();
+    this.storage = storageService;
   }
 
   async deleteFile(key: string) {
-    return this.s3.deleteFile(key);
+    return this.storage.deleteFile(key);
   }
 
   async deleteFiles(keys: string[]) {
-    return this.s3.deleteFiles(keys);
+    return this.storage.deleteFiles(keys);
   }
 
   async getFileContent(key: string): Promise<string> {
-    return this.s3.getFileContent(key);
+    return this.storage.getFileContent(key);
   }
 
   async getFileByteArray(key: string): Promise<Uint8Array> {
-    return this.s3.getFileByteArray(key);
+    return this.storage.getFileByteArray(key);
   }
 
   async createPreSignedUrl(key: string): Promise<string> {
-    return this.s3.createPreSignedUrl(key);
+    return this.storage.createPreSignedUrl(key);
   }
 
   async createPreSignedUrlForPreview(key: string, expiresIn?: number): Promise<string> {
-    return this.s3.createPreSignedUrlForPreview(key, expiresIn);
+    return this.storage.createPreSignedUrlForPreview(key, expiresIn);
   }
 
   async uploadContent(path: string, content: string) {
-    return this.s3.uploadContent(path, content);
+    return this.storage.uploadContent(path, content);
   }
 
   async getFullFileUrl(url?: string | null, expiresIn?: number): Promise<string> {
     if (!url) return '';
 
-    // If bucket is not set public read, the preview address needs to be regenerated each time
-    if (!fileEnv.S3_SET_ACL) {
+    // If using Azure Storage or S3 without public read ACL, generate pre-signed URL
+    if (fileEnv.STORAGE_PROVIDER === 'azure' || !fileEnv.S3_SET_ACL) {
       return await this.createPreSignedUrlForPreview(url, expiresIn);
     }
 
+    // For S3 with public read ACL
     if (fileEnv.S3_ENABLE_PATH_STYLE) {
       return urlJoin(fileEnv.S3_PUBLIC_DOMAIN!, fileEnv.S3_BUCKET!, url);
     }
