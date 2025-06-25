@@ -4,7 +4,7 @@ import { sha256 } from 'js-sha256';
 import { fileEnv } from '@/config/file';
 import { isDesktop, isServerMode } from '@/const/version';
 import { parseDataUri } from '@/libs/model-runtime/utils/uriParser';
-import { edgeClient } from '@/libs/trpc/client';
+import { edgeClient, lambdaClient } from '@/libs/trpc/client';
 import { API_ENDPOINTS } from '@/services/_url';
 import { clientS3Storage } from '@/services/file/ClientS3';
 import { FileMetadata, UploadBase64ToS3Result } from '@/types/files';
@@ -230,7 +230,9 @@ class UploadService {
     const dirname = `${options.directory || fileEnv.NEXT_PUBLIC_S3_FILE_PATH}/${date}`;
     const pathname = options.pathname ?? `${dirname}/${filename}`;
 
-    const preSignUrl = await edgeClient.upload.createS3PreSignedUrl.mutate({ pathname });
+    // Use lambda client for Azure storage to avoid Edge Runtime issues
+    const client = fileEnv.STORAGE_PROVIDER === 'azure' ? lambdaClient : edgeClient;
+    const preSignUrl = await client.upload.createS3PreSignedUrl.mutate({ pathname });
 
     return {
       date,
