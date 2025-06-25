@@ -42,8 +42,8 @@ const nextConfig: NextConfig = {
     // refs: https://github.com/lobehub/lobe-chat/pull/7430
     serverMinification: false,
     // Disable strict mode in production to avoid searchParams awaiting issues
-strictNextHead: false,
-    
+    strictNextHead: false,
+
     webVitalsAttribution: ['CLS', 'LCP'],
   },
   async headers() {
@@ -233,7 +233,9 @@ strictNextHead: false,
         destination: '/emojis/:path*',
         source: '/api/emojis/:path*',
       },
-      // WAF-friendly Next.js static files rewrites - comprehensive coverage
+
+      // ===== WAF-FRIENDLY URL MAPPINGS =====
+      // Core Next.js static files rewrites
       {
         destination: '/_next/static/chunks/:path*',
         source: '/static/js/:path*',
@@ -250,12 +252,8 @@ strictNextHead: false,
         destination: '/_next/static/:path*',
         source: '/nextjs-static/:path*',
       },
-      // Rewrite Next.js chunks with special characters to avoid WAF blocking
-      {
-        destination: '/_next/static/chunks/:path*',
-        source: '/nextjs-chunks/:path*',
-      },
-      // Handle safe-chunks pattern for WAF-friendly URLs
+
+      // Safe chunk patterns for WAF
       {
         destination: '/_next/static/chunks/:path*',
         source: '/safe-chunks/:path*',
@@ -264,21 +262,73 @@ strictNextHead: false,
         destination: '/_next/static/chunks/:path*',
         source: '/js-chunks/:path*',
       },
-      // General WAF-safe patterns for any static file with encoded characters
+      {
+        destination: '/_next/static/chunks/:path*',
+        source: '/waf-chunks/:path*',
+      },
+
+      // Handle app router dynamic routes with brackets
+      {
+        destination: '/_next/static/chunks/app/:path*',
+        source: '/app-safe/:path*',
+      },
+
+      // Handle variant patterns (encoded brackets)
+      {
+        destination: '/_next/static/chunks/app/v/%5Bvariant%5D/:path*',
+        source: '/app-chunks/variant/:path*',
+      },
+
+      // Handle auth dynamic routes
+      {
+        destination: '/api/auth/%5B...nextauth%5D/:path*',
+        source: '/api/auth-safe/:path*',
+      },
+
+      // Handle file routes with brackets
+      {
+        destination: '/api/offline-fonts/%5B...slug%5D/:path*',
+        source: '/api/fonts-safe/:path*',
+      },
+
+      // Handle login dynamic routes
+      {
+        destination: '/login/%5B%5B...login%5D%5D/:path*',
+        source: '/login-safe/:path*',
+      },
+
+      // General WAF-safe patterns for any static file with special characters
       {
         destination: '/_next/static/:path*',
         source: '/waf-safe/:path*',
       },
-      // Enhanced WAF-friendly URL rewrites for development mode
-      // Handle encoded brackets in chunk URLs
+
+      // Handle pages with parentheses in route groups
       {
-        destination: '/_next/static/chunks/:path*',
-        source: '/static/js/:path*',
+        destination: '/backend/:path*',
+        source: '/backend-safe/:path*',
       },
-      // Handle app router chunks with variant patterns
+
+      // Handle TRPC routes with brackets
       {
-        destination: '/_next/static/chunks/app/v/%5Bvariant%5D/:path*',
-        source: '/app-chunks/variant/:path*',
+        destination: '/trpc/lambda/%5Btrpc%5D/:path*',
+        source: '/trpc-lambda-safe/:path*',
+      },
+      {
+        destination: '/trpc/tools/%5Btrpc%5D/:path*',
+        source: '/trpc-tools-safe/:path*',
+      },
+
+      // Handle any remaining encoded characters in URLs
+      {
+        destination: '/:path*',
+        has: [
+          {
+            key: 'original',
+            type: 'query',
+          },
+        ],
+        source: '/decode/:path*',
       },
     ];
   },
@@ -293,15 +343,14 @@ strictNextHead: false,
       layers: true,
     };
 
-    // Add WAF HTML rewriter plugin for development mode
-    if (!isProd) {
-      config.plugins = config.plugins || [];
-      config.plugins.push(
-        new WAFHTMLRewriterPlugin({
-          development: true,
-        }),
-      );
-    }
+    // Add WAF HTML rewriter plugin for both development and production
+    config.plugins = config.plugins || [];
+    config.plugins.push(
+      new WAFHTMLRewriterPlugin({
+        development: !isProd,
+        production: isProd,
+      }),
+    );
 
     // 开启该插件会导致 pglite 的 fs bundler 被改表
     if (enableReactScan && !isUsePglite) {

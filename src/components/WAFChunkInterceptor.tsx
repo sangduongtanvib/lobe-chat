@@ -12,7 +12,13 @@ export default function WAFChunkInterceptor() {
       // Only run in browser environment
       if (typeof window === 'undefined') return;
       
-      console.debug('WAF: Initializing static file interceptor');
+      // Check if early interceptors are already initialized
+      if (window.__WAF_EARLY_INTERCEPTORS_INITIALIZED__) {
+        console.debug('WAF: Early interceptors already initialized, skipping duplicate setup');
+        return;
+      }
+      
+      console.debug('WAF: Initializing additional static file interceptor (fallback)');
       
       // Enhanced chunk monitoring for development mode
       const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
