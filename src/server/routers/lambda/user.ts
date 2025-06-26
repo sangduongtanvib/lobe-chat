@@ -105,9 +105,9 @@ export const userRouter = router({
 
     // Process avatar URL to ensure it's a pre-signed URL for Azure Blob Storage
     const fileService = new FileService(ctx.serverDB, ctx.userId);
-    const processedAvatar = state.avatar
-      ? await fileService.getFullFileUrl(state.avatar)
-      : state.avatar;
+    const processedAvatar = state.avatar?.startsWith('http')
+      ? state.avatar
+      : await fileService.getFullFileUrl(state.avatar);
 
     return {
       avatar: processedAvatar,
