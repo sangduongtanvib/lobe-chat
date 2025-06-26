@@ -126,6 +126,8 @@ export class AzureStorage implements StorageInterface {
     const permissions = new BlobSASPermissions();
     permissions.write = true;
     permissions.create = true;
+    permissions.add = true; // Required for uploading new blobs
+    permissions.delete = true; // Required for workspace file management
 
     const sasUrl = await blobClient.generateSasUrl({
       expiresOn: new Date(Date.now() + 3600 * 1000), // 1 hour
