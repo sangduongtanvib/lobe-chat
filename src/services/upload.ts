@@ -230,9 +230,15 @@ class UploadService {
     const dirname = `${options.directory || fileEnv.NEXT_PUBLIC_S3_FILE_PATH}/${date}`;
     const pathname = options.pathname ?? `${dirname}/${filename}`;
 
-    // Use lambda client for Azure storage to avoid Edge Runtime issues
-    const client = fileEnv.STORAGE_PROVIDER === 'azure' ? lambdaClient : edgeClient;
-    const preSignUrl = await client.upload.createS3PreSignedUrl.mutate({ pathname });
+    // Try lambda client first (supports both Azure and S3)
+    // If it fails, fall back to edge client (S3 only)
+    let preSignUrl: string;
+    try {
+      preSignUrl = await lambdaClient.upload.createS3PreSignedUrl.mutate({ pathname });
+    } catch {
+      // If lambda fails (likely Azure in Edge), try edge client
+      preSignUrl = await edgeClient.upload.createS3PreSignedUrl.mutate({ pathname });
+    }
 
     return {
       date,
