@@ -24,7 +24,7 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
     return null;
   }
 
-  console.log('WAF Handler: Processing request for', url.pathname);
+  //console.log('WAF Handler: Processing request for', url.pathname);
 
   // Extract the filename
   const requestedFile = url.pathname.replace(matchedPath.path, '');
@@ -79,7 +79,7 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
     const rewriteUrl = new URL(request.url);
     rewriteUrl.pathname = `${matchedPath.target}${originalFilename}`;
 
-    console.log('WAF Handler: Rewriting WAF-safe chunk', url.pathname, '->', rewriteUrl.pathname);
+    //console.log('WAF Handler: Rewriting WAF-safe chunk', url.pathname, '->', rewriteUrl.pathname);
     return NextResponse.rewrite(rewriteUrl);
   }
 

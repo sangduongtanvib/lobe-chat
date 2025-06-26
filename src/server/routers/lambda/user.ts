@@ -103,8 +103,14 @@ export const userRouter = router({
     const hasAnyMessages = await messageModel.hasMoreThanN(0);
     const hasExtraSession = await sessionModel.hasMoreThanN(1);
 
+    // Process avatar URL to ensure it's a pre-signed URL for Azure Blob Storage
+    const fileService = new FileService(ctx.serverDB, ctx.userId);
+    const processedAvatar = state.avatar
+      ? await fileService.getFullFileUrl(state.avatar)
+      : state.avatar;
+
     return {
-      avatar: state.avatar,
+      avatar: processedAvatar,
       canEnablePWAGuide: hasMoreThan4Messages,
       canEnableTrace: hasMoreThan4Messages,
       email: state.email,

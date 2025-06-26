@@ -105,7 +105,7 @@ export const messageRouter = router({
       const fileService = new FileService(serverDB, ctx.userId);
 
       return messageModel.query(input, {
-        postProcessUrl: (path) => fileService.getFullFileUrl(path),
+        postProcessUrl: async (path) => await fileService.getFullFileUrl(path),
       });
     }),
 
