@@ -156,7 +156,16 @@ class UploadService {
     });
 
     xhr.open('PUT', preSignUrl);
-    xhr.setRequestHeader('Content-Type', file.type);
+
+    // Add Azure Blob Storage required headers
+    if (preSignUrl.includes('blob.core.windows.net')) {
+      xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+      // Remove Content-Type for Azure - let it auto-detect or use default
+    } else {
+      // For S3, set Content-Type
+      xhr.setRequestHeader('Content-Type', file.type);
+    }
+
     const data = await file.arrayBuffer();
 
     await new Promise((resolve, reject) => {
