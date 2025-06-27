@@ -114,11 +114,31 @@ export class LobeAzureOpenAI implements LobeRuntimeAI {
     try {
       const { input, model, dimensions } = payload;
 
-      const response = await this.client.embeddings.create({
-        dimensions,
+      // Only include dimensions for models that support it
+      const supportsDimensions = model.includes('text-embedding-3');
+
+      const embeddingParams: any = {
         input,
         model,
+      };
+
+      if (supportsDimensions && dimensions) {
+        embeddingParams.dimensions = dimensions;
+        console.log(`[Azure Embeddings] Using dimensions ${dimensions} for model ${model}`);
+      } else {
+        console.log(
+          `[Azure Embeddings] Skipping dimensions for model ${model} (not supported or not provided)`,
+        );
+      }
+
+      console.log(`[Azure Embeddings] Request params:`, {
+        inputCount: Array.isArray(input) ? input.length : 1,
+        model,
+        supportsDimensions,
+        willUseDimensions: !!(supportsDimensions && dimensions),
       });
+
+      const response = await this.client.embeddings.create(embeddingParams);
 
       // Return embeddings in the format expected by the application
       return response.data.map((item) => item.embedding);
