@@ -144,11 +144,35 @@ export class AzureStorage implements StorageInterface {
     const containerClient = this.client.getContainerClient(this.containerName);
     const blobClient = containerClient.getBlobClient(key);
 
+    // Get blob properties to determine content type
+    let contentType = 'application/octet-stream';
+    try {
+      const properties = await blobClient.getProperties();
+      contentType = properties.contentType || contentType;
+    } catch (error) {
+      console.warn('Could not get blob properties for content type detection:', error);
+    }
+
     // Tạo SAS URL cho preview (read permission)
     const permissions = new BlobSASPermissions();
     permissions.read = true;
 
+    // Set response headers to ensure proper preview behavior
+    const responseHeaders: any = {};
+
+    // Determine if content should be displayed inline
+    const previewableTypes = ['image/', 'application/pdf', 'text/', 'video/', 'audio/'];
+    const shouldPreview = previewableTypes.some((type) => contentType.startsWith(type));
+
+    if (shouldPreview) {
+      responseHeaders['content-disposition'] = 'inline';
+    }
+
+    // Always set the correct content type
+    responseHeaders['content-type'] = contentType;
+
     const sasUrl = await blobClient.generateSasUrl({
+      contentResponseHeaders: responseHeaders,
       expiresOn: new Date(Date.now() + (expiresIn || fileEnv.S3_PREVIEW_URL_EXPIRE_IN) * 1000),
       permissions,
     });
@@ -163,10 +187,34 @@ export class AzureStorage implements StorageInterface {
 
     const options: any = {};
     if (contentType) {
-      options.blobHTTPHeaders = { blobContentType: contentType };
+      options.blobHTTPHeaders = {
+        // Set Content-Disposition to inline for images and other previewable content
+blobContentDisposition: this.getContentDisposition(contentType, path),
+        
+        blobContentType: contentType,
+      };
     }
 
     return blockBlobClient.upload(buffer, buffer.length, options);
+  }
+
+  private getContentDisposition(contentType?: string, path?: string): string {
+    if (!contentType) {
+      return 'attachment';
+    }
+
+    // For images, PDFs, text files, we want inline display
+    const previewableTypes = ['image/', 'application/pdf', 'text/', 'video/', 'audio/'];
+
+    const shouldPreview = previewableTypes.some((type) => contentType.startsWith(type));
+
+    if (shouldPreview) {
+      return 'inline';
+    }
+
+    // For other types, use attachment with filename
+    const filename = path ? path.split('/').pop() : 'file';
+    return `attachment; filename="${filename}"`;
   }
 
   public async uploadContent(path: string, content: string) {
