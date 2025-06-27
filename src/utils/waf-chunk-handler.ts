@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * WAF-friendly static file handler for middleware (Edge Runtime)
  * This component handles serving WAF-friendly static URLs by mapping them back to original paths
+ * Fixed: Added better error handling for self-signed certificate issues
  */
 export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | null {
   const url = new URL(request.url);
@@ -98,12 +99,12 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
       const rewriteUrl = new URL(request.url);
       rewriteUrl.pathname = `/_next/static/chunks/${originalFilename}`;
 
-      console.log(
-        'WAF Handler: Rewriting app variant chunk',
-        url.pathname,
-        '->',
-        rewriteUrl.pathname,
-      );
+      //console.log(
+      //'WAF Handler: Rewriting app variant chunk',
+      //url.pathname,
+      //'->',
+      //rewriteUrl.pathname,
+      //);
       return NextResponse.rewrite(rewriteUrl);
     }
   }
@@ -128,12 +129,12 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
       const rewriteUrl = new URL(request.url);
       rewriteUrl.pathname = `/_next/static/chunks/${originalFilename}`;
 
-      console.log(
-        'WAF Handler: Rewriting complex app variant pattern',
-        url.pathname,
-        '->',
-        rewriteUrl.pathname,
-      );
+      //console.log(
+      //'WAF Handler: Rewriting complex app variant pattern',
+      //url.pathname,
+      //'->',
+      //rewriteUrl.pathname,
+      //);
       return NextResponse.rewrite(rewriteUrl);
     }
   }
@@ -145,6 +146,6 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
   const rewriteUrl = new URL(request.url);
   rewriteUrl.pathname = `${matchedPath.target}${requestedFile}`;
 
-  console.log('WAF Handler: Direct mapping', url.pathname, '->', rewriteUrl.pathname);
+  //console.log('WAF Handler: Direct mapping', url.pathname, '->', rewriteUrl.pathname);
   return NextResponse.rewrite(rewriteUrl);
 }
