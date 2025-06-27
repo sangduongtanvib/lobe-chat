@@ -5,7 +5,13 @@ import { systemToUserModels } from '@/const/models';
 
 import { LobeRuntimeAI } from '../BaseAI';
 import { AgentRuntimeErrorType } from '../error';
-import { ChatCompetitionOptions, ChatStreamPayload, ModelProvider } from '../types';
+import {
+  ChatCompetitionOptions,
+  ChatStreamPayload,
+  Embeddings,
+  EmbeddingsPayload,
+  ModelProvider,
+} from '../types';
 import { AgentRuntimeError } from '../utils/createError';
 import { debugStream } from '../utils/debugStream';
 import { transformResponseToStream } from '../utils/openaiCompatibleFactory';
@@ -75,6 +81,49 @@ export class LobeAzureOpenAI implements LobeRuntimeAI {
         });
       }
     } catch (e) {
+      let error = e as { [key: string]: any; code: string; message: string };
+
+      if (error.code) {
+        switch (error.code) {
+          case 'DeploymentNotFound': {
+            error = { ...error, deployId: model };
+          }
+        }
+      } else {
+        error = {
+          cause: error.cause,
+          message: error.message,
+          name: error.name,
+        } as any;
+      }
+
+      const errorType = error.code
+        ? AgentRuntimeErrorType.ProviderBizError
+        : AgentRuntimeErrorType.AgentRuntimeError;
+
+      throw AgentRuntimeError.chat({
+        endpoint: this.maskSensitiveUrl(this.baseURL),
+        error,
+        errorType,
+        provider: ModelProvider.Azure,
+      });
+    }
+  }
+
+  async embeddings(payload: EmbeddingsPayload): Promise<Embeddings[]> {
+    try {
+      const { input, model, dimensions } = payload;
+
+      const response = await this.client.embeddings.create({
+        dimensions,
+        input,
+        model,
+      });
+
+      // Return embeddings in the format expected by the application
+      return response.data.map((item) => item.embedding);
+    } catch (e) {
+      const { model } = payload;
       let error = e as { [key: string]: any; code: string; message: string };
 
       if (error.code) {
