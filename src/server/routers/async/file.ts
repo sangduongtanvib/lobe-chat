@@ -104,21 +104,67 @@ export const fileRouter = router({
                   model,
                 });
 
-                const items: NewEmbeddingsItem[] =
-                  embeddings?.map((e, idx) => ({
-                    chunkId: chunks[idx].id,
-                    embeddings: e,
-                    fileId: input.fileId,
-                    model,
-                  })) || [];
+                console.log(`[DEBUG] Raw embeddings response for batch ${index + 1}:`, {
+                  hasData: embeddings && embeddings.length > 0,
+                  isArray: Array.isArray(embeddings),
+                  length: embeddings?.length,
+                  type: typeof embeddings,
+                });
+
+                // Validate embeddings response
+                if (!embeddings || !Array.isArray(embeddings) || embeddings.length === 0) {
+                  throw new Error(
+                    `Embeddings API returned invalid response for batch ${index + 1}: ${JSON.stringify(embeddings)}`,
+                  );
+                }
+
+                if (embeddings.length !== chunks.length) {
+                  throw new Error(
+                    `Embeddings count (${embeddings.length}) doesn't match chunks count (${chunks.length}) for batch ${index + 1}`,
+                  );
+                }
+
+                // Validate each embedding
+                for (const [i, embedding] of embeddings.entries()) {
+                  if (!Array.isArray(embedding) || embedding.length === 0) {
+                    throw new Error(
+                      `Invalid embedding at index ${i} in batch ${index + 1}: expected array of numbers`,
+                    );
+                  }
+                }
+
+                const items: NewEmbeddingsItem[] = embeddings.map((e, idx) => ({
+                  chunkId: chunks[idx].id,
+                  embeddings: e,
+                  fileId: input.fileId,
+                  model,
+                }));
 
                 await ctx.embeddingModel.bulkCreate(items);
               },
               { concurrency: CONCURRENCY },
             );
           } catch (e) {
+            console.error('[Embedding Error] Full error details:', {
+              keys: Object.keys(e as any),
+              message: (e as any)?.message,
+              name: (e as any)?.name,
+              stack: (e as any)?.stack,
+              type: typeof e,
+            });
+
+            // Try to get more meaningful error message
+            let errorMessage = 'Unknown embedding error';
+            if (e instanceof Error) {
+              errorMessage = e.message;
+            } else if (typeof e === 'object' && e !== null) {
+              errorMessage = (e as any).message || JSON.stringify(e);
+            } else {
+              errorMessage = String(e);
+            }
+
             throw {
-              message: JSON.stringify(e),
+              message: errorMessage,
               name: AsyncTaskErrorType.EmbeddingError,
             };
           }

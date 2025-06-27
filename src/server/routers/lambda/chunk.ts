@@ -182,8 +182,22 @@ export const chunkRouter = router({
         );
         console.timeEnd('embedding');
 
+        // Validate embeddings response
+        if (!embeddings || !Array.isArray(embeddings) || embeddings.length === 0) {
+          throw new Error(
+            `Embeddings API returned invalid response for semantic search: ${JSON.stringify(embeddings)}`,
+          );
+        }
+
+        // Validate the first embedding
+        if (!Array.isArray(embeddings[0]) || embeddings[0].length === 0) {
+          throw new Error(
+            `Invalid embedding format: expected array of numbers, got ${typeof embeddings[0]}`,
+          );
+        }
+
         const result = await ctx.chunkModel.semanticSearch({
-          embedding: embeddings![0],
+          embedding: embeddings[0],
           fileIds: input.fileIds,
           query: input.query,
         });
@@ -248,7 +262,28 @@ export const chunkRouter = router({
             embeddings?.length,
           );
 
-          embedding = embeddings![0];
+          console.log('[DEBUG] Raw embeddings response for semantic search:', {
+            hasData: embeddings && embeddings.length > 0,
+            isArray: Array.isArray(embeddings),
+            length: embeddings?.length,
+            type: typeof embeddings,
+          });
+
+          // Validate embeddings response
+          if (!embeddings || !Array.isArray(embeddings) || embeddings.length === 0) {
+            throw new Error(
+              `Embeddings API returned invalid response for semantic search: ${JSON.stringify(embeddings)}`,
+            );
+          }
+
+          // Validate the first embedding
+          if (!Array.isArray(embeddings[0]) || embeddings[0].length === 0) {
+            throw new Error(
+              `Invalid embedding format: expected array of numbers, got ${typeof embeddings[0]}`,
+            );
+          }
+
+          embedding = embeddings[0];
           const embeddingsId = await ctx.embeddingModel.create({
             embeddings: embedding,
             model,
