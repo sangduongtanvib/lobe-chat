@@ -11,18 +11,6 @@ const isAzureBlobUrl = (url: string): boolean => {
   return url.includes('.blob.core.windows.net');
 };
 
-// Helper function to modify Azure Blob URL for better preview
-const optimizeAzureBlobUrl = (url: string): string => {
-  // If it's already a SAS URL with parameters, keep it as is
-  if (url.includes('?')) {
-    return url;
-  }
-
-  // For direct Azure blob URLs, we might need to add inline parameter
-  // but this depends on the actual blob configuration
-  return url;
-};
-
 export const convertMessageContent = async (
   content: OpenAI.ChatCompletionContentPart,
 ): Promise<OpenAI.ChatCompletionContentPart> => {
@@ -32,39 +20,40 @@ export const convertMessageContent = async (
     if (type === 'url') {
       // Special handling for Azure Blob URLs
       if (isAzureBlobUrl(content.image_url.url)) {
-        const optimizedUrl = optimizeAzureBlobUrl(content.image_url.url);
-
-        // If LLM_VISION_IMAGE_USE_BASE64 is enabled, convert to base64
-        if (process.env.LLM_VISION_IMAGE_USE_BASE64 === '1') {
-          try {
-            const { base64, mimeType } = await imageUrlToBase64(optimizedUrl);
-            return {
-              ...content,
-              image_url: { ...content.image_url, url: `data:${mimeType};base64,${base64}` },
-            };
-          } catch (error) {
-            console.warn('Failed to convert Azure blob to base64, using original URL:', error);
-            return {
-              ...content,
-              image_url: { ...content.image_url, url: optimizedUrl },
-            };
-          }
+        // Azure OpenAI often has issues with SAS URLs, so convert to base64
+        try {
+          console.log(
+            '[convertMessageContent] Converting Azure blob URL to base64:',
+            content.image_url.url,
+          );
+          const { base64, mimeType } = await imageUrlToBase64(content.image_url.url);
+          return {
+            ...content,
+            image_url: { ...content.image_url, url: `data:${mimeType};base64,${base64}` },
+          };
+        } catch (error) {
+          console.error('[convertMessageContent] Failed to convert Azure blob to base64:', error);
+          // If base64 conversion fails, throw error as Azure OpenAI likely won't accept the SAS URL
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          throw new Error(`Failed to process Azure blob image: ${errorMessage}`);
         }
-
-        return {
-          ...content,
-          image_url: { ...content.image_url, url: optimizedUrl },
-        };
       }
 
       // Standard URL handling for non-Azure URLs
       if (process.env.LLM_VISION_IMAGE_USE_BASE64 === '1') {
-        const { base64, mimeType } = await imageUrlToBase64(content.image_url.url);
-
-        return {
-          ...content,
-          image_url: { ...content.image_url, url: `data:${mimeType};base64,${base64}` },
-        };
+        try {
+          const { base64, mimeType } = await imageUrlToBase64(content.image_url.url);
+          return {
+            ...content,
+            image_url: { ...content.image_url, url: `data:${mimeType};base64,${base64}` },
+          };
+        } catch (error) {
+          console.warn(
+            '[convertMessageContent] Failed to convert URL to base64, using original URL:',
+            error,
+          );
+          return content;
+        }
       }
     }
   }

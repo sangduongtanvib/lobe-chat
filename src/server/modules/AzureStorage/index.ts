@@ -185,15 +185,16 @@ export class AzureStorage implements StorageInterface {
     const containerClient = this.client.getContainerClient(this.containerName);
     const blockBlobClient = containerClient.getBlockBlobClient(path);
 
+    // If contentType is not provided, detect from file extension
+    const finalContentType = contentType || this.getMimeTypeFromPath(path);
+
     const options: any = {};
-    if (contentType) {
-      options.blobHTTPHeaders = {
-        // Set Content-Disposition to inline for images and other previewable content
-blobContentDisposition: this.getContentDisposition(contentType, path),
-        
-        blobContentType: contentType,
-      };
-    }
+    options.blobHTTPHeaders = {
+      blobContentDisposition: this.getContentDisposition(finalContentType, path),
+      blobContentType: finalContentType,
+    };
+
+    console.log(`[AzureStorage] Uploading ${path} with Content-Type: ${finalContentType}`);
 
     return blockBlobClient.upload(buffer, buffer.length, options);
   }
@@ -232,5 +233,96 @@ blobContentDisposition: this.getContentDisposition(contentType, path),
     }
 
     return `https://${accountName}.blob.core.windows.net/${this.containerName}/${key}`;
+  }
+
+  private getMimeTypeFromPath(path: string): string {
+    const ext = path.toLowerCase().split('.').pop();
+
+    const mimeTypes: Record<string, string> = {
+      // Archives
+      '7z': 'application/x-7z-compressed',
+
+      // Video
+      'avi': 'video/x-msvideo',
+
+      // Images
+      'bmp': 'image/bmp',
+
+      // Text
+      'css': 'text/css',
+
+      // Documents
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+
+      // Audio
+      'flac': 'audio/flac',
+
+      // Images
+      'gif': 'image/gif',
+
+      // Text
+      'html': 'text/html',
+
+      // Images
+      'ico': 'image/x-icon',
+
+      // Images
+      'jpeg': 'image/jpeg',
+      'jpg': 'image/jpeg',
+
+      // Text
+      'js': 'text/javascript',
+      'json': 'application/json',
+
+      // Video
+      'mov': 'video/quicktime',
+
+      // Audio
+      'mp3': 'audio/mpeg',
+
+      // Video
+      'mp4': 'video/mp4',
+
+      // Documents
+      'pdf': 'application/pdf',
+
+      // Images
+      'png': 'image/png',
+
+      // Documents
+      'ppt': 'application/vnd.ms-powerpoint',
+      'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+
+      // Archives
+      'rar': 'application/x-rar-compressed',
+
+      // Images
+      'svg': 'image/svg+xml',
+
+      // Text
+      'txt': 'text/plain',
+
+      // Audio
+      'wav': 'audio/wav',
+
+      // Images
+      'webp': 'image/webp',
+
+      // Video
+      'wmv': 'video/x-ms-wmv',
+
+      // Documents
+      'xls': 'application/vnd.ms-excel',
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+
+      // Text
+      'xml': 'application/xml',
+
+      // Archives
+      'zip': 'application/zip',
+    };
+
+    return mimeTypes[ext || ''] || 'application/octet-stream';
   }
 }

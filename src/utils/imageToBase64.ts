@@ -36,6 +36,28 @@ export const imageToBase64 = ({
   return canvas.toDataURL(type);
 };
 
+// Helper function to detect MIME type from URL
+const getMimeTypeFromUrl = (url: string): string => {
+  // Extract filename from URL (before query parameters)
+  const urlPath = url.split('?')[0];
+  const ext = urlPath.toLowerCase().split('.').pop();
+
+  const mimeTypes: Record<string, string> = {
+    bmp: 'image/bmp',
+    gif: 'image/gif',
+    ico: 'image/x-icon',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    png: 'image/png',
+    svg: 'image/svg+xml',
+    tif: 'image/tiff',
+    tiff: 'image/tiff',
+    webp: 'image/webp',
+  };
+
+  return mimeTypes[ext || ''] || 'application/octet-stream';
+};
+
 export const imageUrlToBase64 = async (
   imageUrl: string,
 ): Promise<{ base64: string; mimeType: string }> => {
@@ -54,7 +76,15 @@ export const imageUrlToBase64 = async (
           )
         : Buffer.from(arrayBuffer).toString('base64');
 
-    return { base64, mimeType: blob.type };
+    // Get MIME type from blob, fallback to URL-based detection
+    let mimeType = blob.type;
+
+    // If blob type is not set or is generic, try to detect from URL
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      mimeType = getMimeTypeFromUrl(imageUrl);
+    }
+
+    return { base64, mimeType };
   } catch (error) {
     console.error('Error converting image to base64:', error);
     throw error;
