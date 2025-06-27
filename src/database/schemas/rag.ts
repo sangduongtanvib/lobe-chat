@@ -10,6 +10,7 @@ import {
   vector,
 } from 'drizzle-orm/pg-core';
 
+import { DB_EMBEDDING_DIMENSIONS } from '../config/embedding-dimensions';
 import { timestamps } from './_helpers';
 import { files } from './file';
 import { users } from './user';
@@ -70,7 +71,7 @@ export const embeddings = pgTable(
     chunkId: uuid('chunk_id')
       .references(() => chunks.id, { onDelete: 'cascade' })
       .unique(),
-    embeddings: vector('embeddings', { dimensions: 1024 }),
+    embeddings: vector('embeddings', { dimensions: DB_EMBEDDING_DIMENSIONS }),
     model: text('model'),
     clientId: text('client_id'),
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),

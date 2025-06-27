@@ -1,0 +1,1 @@
+ALTER TABLE "embeddings" ALTER COLUMN "embeddings" SET DATA TYPE vector(1536);

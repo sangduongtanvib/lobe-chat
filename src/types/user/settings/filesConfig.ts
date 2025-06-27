@@ -1,4 +1,5 @@
 export interface FilesConfigItem {
+  dimensions?: number;
   model: string;
   provider: string;
 }

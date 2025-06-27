@@ -133,4 +133,53 @@ describe('parseFilesConfig', () => {
       parseFilesConfig(envStr);
     }).toThrow(new Error('Invalid environment variable format.'));
   });
+
+  // Test với dimensions
+  it('parses configuration with dimensions correctly', () => {
+    const envStr = 'embedding_model=azure/text-embedding-ada-002,dimensions=1536';
+    const expected = {
+      embeddingModel: { provider: 'azure', model: 'text-embedding-ada-002', dimensions: 1536 },
+    };
+    expect(parseFilesConfig(envStr)).toEqual(expected);
+  });
+
+  it('applies dimensions to embedding model when defined after', () => {
+    const envStr = 'dimensions=1024,embedding_model=azure/text-embedding-ada-002';
+    const expected = {
+      embeddingModel: { provider: 'azure', model: 'text-embedding-ada-002', dimensions: 1024 },
+    };
+    expect(parseFilesConfig(envStr)).toEqual(expected);
+  });
+
+  it('parses full configuration with dimensions correctly', () => {
+    const envStr =
+      'embedding_model=azure/text-embedding-ada-002,dimensions=1536,reranker_model=cohere/rerank-english-v3.0,query_mode=full_text';
+    const expected = {
+      embeddingModel: { provider: 'azure', model: 'text-embedding-ada-002', dimensions: 1536 },
+      rerankerModel: { provider: 'cohere', model: 'rerank-english-v3.0' },
+      queryMode: 'full_text',
+    };
+    expect(parseFilesConfig(envStr)).toEqual(expected);
+  });
+
+  it('should throw an error for invalid dimensions format', () => {
+    const envStr = 'embedding_model=azure/text-embedding-ada-002,dimensions=invalid';
+    expect(() => {
+      parseFilesConfig(envStr);
+    }).toThrow(new Error('Invalid dimensions value. Expected a positive integer.'));
+  });
+
+  it('should throw an error for negative dimensions', () => {
+    const envStr = 'embedding_model=azure/text-embedding-ada-002,dimensions=-1';
+    expect(() => {
+      parseFilesConfig(envStr);
+    }).toThrow(new Error('Invalid dimensions value. Expected a positive integer.'));
+  });
+
+  it('should throw an error for zero dimensions', () => {
+    const envStr = 'embedding_model=azure/text-embedding-ada-002,dimensions=0';
+    expect(() => {
+      parseFilesConfig(envStr);
+    }).toThrow(new Error('Invalid dimensions value. Expected a positive integer.'));
+  });
 });

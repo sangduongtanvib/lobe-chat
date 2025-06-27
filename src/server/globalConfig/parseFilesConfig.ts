@@ -3,6 +3,7 @@ import { SystemEmbeddingConfig } from '@/types/knowledgeBase';
 import { FilesConfig } from '@/types/user/settings/filesConfig';
 
 const protectedKeys = Object.keys({
+  dimensions: null,
   embedding_model: null,
   query_mode: null,
   reranker_model: null,
@@ -33,6 +34,12 @@ export const parseFilesConfig = (envString: string = ''): SystemEmbeddingConfig 
               );
             }
             config.embeddingModel = { model: model.trim(), provider: provider.trim() };
+
+            // Apply pending dimensions if exists
+            if ((config as any).pendingDimensions) {
+              config.embeddingModel.dimensions = (config as any).pendingDimensions;
+              delete (config as any).pendingDimensions;
+            }
             break;
           }
           case 'reranker_model': {
@@ -48,9 +55,24 @@ export const parseFilesConfig = (envString: string = ''): SystemEmbeddingConfig 
             config.queryMode = value;
             break;
           }
+          case 'dimensions': {
+            const dimensionsValue = parseInt(value, 10);
+            if (isNaN(dimensionsValue) || dimensionsValue <= 0) {
+              throw new Error('Invalid dimensions value. Expected a positive integer.');
+            }
+
+            // If embedding model already exists, apply dimensions directly
+            if (config.embeddingModel) {
+              config.embeddingModel.dimensions = dimensionsValue;
+            } else {
+              // Store dimensions for later use when embedding_model is parsed
+              (config as any).pendingDimensions = dimensionsValue;
+            }
+            break;
+          }
           default: {
             throw new Error(
-              'Invalid environment variable format. expected one of embedding_model, reranker_model, query_mode',
+              'Invalid environment variable format. expected one of embedding_model, reranker_model, query_mode, dimensions',
             );
           }
         }
