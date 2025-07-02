@@ -74,6 +74,12 @@ const defaultMiddleware = (request: NextRequest) => {
     return NextResponse.next();
   }
 
+  // Skip middleware if already on localhost to prevent infinite loop
+  if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') {
+    logDefault('Skipping middleware for localhost request: %s', url.hostname);
+    return NextResponse.next();
+  }
+
   // Handle WAF-friendly static chunks first
   const wafResponse = handleWAFFriendlyChunks(request);
   if (wafResponse) {
@@ -197,24 +203,39 @@ const defaultMiddleware = (request: NextRequest) => {
   // if app is in docker, rewrite to self container
   // https://github.com/lobehub/lobe-chat/issues/5876
   if (appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL) {
-    const newUrl = new URL(url);
+    // Only rewrite static file requests to prevent infinite loop
+    const isStaticFileRequest =
+      url.pathname.startsWith('/_next/static/') ||
+      url.pathname.startsWith('/static/') ||
+      url.pathname.startsWith('/nextjs-static/') ||
+      url.pathname.startsWith('/safe-chunks/') ||
+      url.pathname.startsWith('/js-chunks/') ||
+      url.pathname.startsWith('/waf-safe/');
 
-    // Force HTTP for internal requests when behind Azure App Gateway
-    // This prevents SSL certificate issues with self-signed certs
-    if (
-      process.env.AZURE_APP_GATEWAY === 'true' ||
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0'
-    ) {
-      newUrl.protocol = 'http:';
-      newUrl.port = '3210';
-      newUrl.hostname = '127.0.0.1';
-    } else {
-      newUrl.hostname = '0.0.0.0';
-      newUrl.port = '3210';
+    if (isStaticFileRequest) {
+      const newUrl = new URL(url);
+
+      // Force HTTP for internal requests when behind Azure App Gateway
+      // This prevents SSL certificate issues with self-signed certs
+      if (
+        process.env.AZURE_APP_GATEWAY === 'true' ||
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0'
+      ) {
+        newUrl.protocol = 'http:';
+        newUrl.port = '3210';
+        newUrl.hostname = '127.0.0.1';
+      } else {
+        newUrl.hostname = '0.0.0.0';
+        newUrl.port = '3210';
+      }
+
+      logDefault(
+        'Rewriting static file through local: %s -> %s',
+        url.toString(),
+        newUrl.toString(),
+      );
+      return NextResponse.rewrite(newUrl);
     }
-
-    logDefault('Rewriting through local: %s -> %s', url.toString(), newUrl.toString());
-    return NextResponse.rewrite(newUrl);
   }
 
   // refs: https://github.com/lobehub/lobe-chat/pull/5866
