@@ -2,7 +2,6 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import debug from 'debug';
 import { NextRequest, NextResponse } from 'next/server';
 import { UAParser } from 'ua-parser-js';
-import urlJoin from 'url-join';
 
 import { appEnv } from '@/config/app';
 import { authEnv } from '@/config/auth';
@@ -198,16 +197,24 @@ const defaultMiddleware = (request: NextRequest) => {
   // if app is in docker, rewrite to self container
   // https://github.com/lobehub/lobe-chat/issues/5876
   if (appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL) {
-    logDefault('Local container rewrite enabled: %O', {
-      host: '127.0.0.1',
-      original: url.toString(),
-      port: process.env.PORT || '3210',
-      protocol: 'http',
-    });
+    const newUrl = new URL(url);
 
-    url.protocol = 'http';
-    url.host = '127.0.0.1';
-    url.port = process.env.PORT || '3210';
+    // Force HTTP for internal requests when behind Azure App Gateway
+    // This prevents SSL certificate issues with self-signed certs
+    if (
+      process.env.AZURE_APP_GATEWAY === 'true' ||
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0'
+    ) {
+      newUrl.protocol = 'http:';
+      newUrl.port = '3210';
+      newUrl.hostname = '127.0.0.1';
+    } else {
+      newUrl.hostname = '0.0.0.0';
+      newUrl.port = '3210';
+    }
+
+    logDefault('Rewriting through local: %s -> %s', url.toString(), newUrl.toString());
+    return NextResponse.rewrite(newUrl);
   }
 
   // refs: https://github.com/lobehub/lobe-chat/pull/5866
@@ -215,14 +222,9 @@ const defaultMiddleware = (request: NextRequest) => {
   // / -> /v/en-US__0__dark
   // /discover -> /v/en-US__0__dark/discover
   const nextPathname = `/v/${route}` + (url.pathname === '/' ? '' : url.pathname);
-  const nextURL = appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL
-    ? urlJoin(url.origin, nextPathname)
-    : nextPathname;
 
   logDefault('URL rewrite: %O', {
-    isLocalRewrite: appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL,
     nextPathname: nextPathname,
-    nextURL: nextURL,
     originalPathname: url.pathname,
   });
 

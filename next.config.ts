@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
   ...(isStandaloneMode ? standaloneConfig : {}),
   basePath,
   compress: isProd,
+
   experimental: {
     optimizePackageImports: [
       'emoji-mart',
@@ -46,6 +47,10 @@ const nextConfig: NextConfig = {
 
     webVitalsAttribution: ['CLS', 'LCP'],
   },
+  // Force build ID to invalidate cache
+  generateBuildId: async () => {
+    return `build-${Date.now()}`;
+  },
   async headers() {
     return [
       {
@@ -56,6 +61,23 @@ const nextConfig: NextConfig = {
           },
         ],
         source: '/fonts/(.*).(woff|woff2|css)',
+      },
+      {
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ],
+        source: '/_next/static/chunks/(.*)',
       },
       {
         headers: [
