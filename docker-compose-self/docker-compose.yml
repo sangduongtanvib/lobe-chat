@@ -106,6 +106,10 @@ services:
         condition: service_started
 
     environment:
+      # SSL Certificate bypass for self-signed certificates
+      # ⚠️ WARNING: This disables SSL certificate verification for security reasons
+      # Only use this in development environments with trusted self-signed certificates
+      - 'NODE_TLS_REJECT_UNAUTHORIZED=0'
       - 'ENABLE_OPENAI=0'
       - 'NEXT_AUTH_SSO_PROVIDERS=casdoor'
       - 'KEY_VAULTS_SECRET=Kix2wcUONd4CX51E/ZPAd36BqM4wzJgKjPtz2sGztqQ='

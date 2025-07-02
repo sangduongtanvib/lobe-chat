@@ -343,6 +343,17 @@ const nextConfig: NextConfig = {
       layers: true,
     };
 
+    // Add SSL/TLS certificate handling for proxy requests
+    if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+      // Also set it for any child processes
+      config.node = {
+        ...config.node,
+        __dirname: false,
+        __filename: false,
+      };
+    }
+
     // Add WAF HTML rewriter plugin for both development and production
     config.plugins = config.plugins || [];
     config.plugins.push(

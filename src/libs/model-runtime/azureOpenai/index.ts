@@ -114,8 +114,11 @@ export class LobeAzureOpenAI implements LobeRuntimeAI {
     try {
       const { input, model, dimensions } = payload;
 
-      // Only include dimensions for models that support it
-      const supportsDimensions = model.includes('text-embedding-3');
+      // Support dimensions for embedding models
+      // text-embedding-3-* models support configurable dimensions
+      // text-embedding-ada-002 has fixed 1536 dimensions but we can still pass dimensions parameter
+      const supportsDimensions =
+        model.includes('text-embedding-3') || model === 'text-embedding-ada-002';
 
       const embeddingParams: any = {
         input,

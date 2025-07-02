@@ -2,7 +2,10 @@ import { TRPCError } from '@trpc/server';
 import { inArray } from 'drizzle-orm/expressions';
 import { z } from 'zod';
 
-import { DEFAULT_FILE_EMBEDDING_MODEL_ITEM } from '@/const/settings/knowledge';
+import {
+  DEFAULT_FILE_EMBEDDING_MODEL_ITEM,
+  getEmbeddingDimensions,
+} from '@/const/settings/knowledge';
 import { AsyncTaskModel } from '@/database/models/asyncTask';
 import { ChunkModel } from '@/database/models/chunk';
 import { EmbeddingModel } from '@/database/models/embedding';
@@ -164,15 +167,24 @@ export const chunkRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         console.log('[semanticSearch] Starting embedding process for query:', input.query);
-        const { model, provider } =
+        const embeddingConfig =
           getServerDefaultFilesConfig().embeddingModel || DEFAULT_FILE_EMBEDDING_MODEL_ITEM;
-        console.log('[semanticSearch] Using model:', model, 'provider:', provider);
+        const { model, provider } = embeddingConfig;
+        const dimensions = getEmbeddingDimensions(embeddingConfig);
+        console.log(
+          '[semanticSearch] Using model:',
+          model,
+          'provider:',
+          provider,
+          'dimensions:',
+          dimensions,
+        );
 
         const agentRuntime = await initAgentRuntimeWithUserPayload(provider, ctx.jwtPayload);
         console.log('[semanticSearch] AgentRuntime initialized successfully');
 
         const embeddings = await agentRuntime.embeddings({
-          dimensions: 1024,
+          dimensions,
           input: input.query,
           model,
         });
@@ -228,9 +240,18 @@ export const chunkRouter = router({
         const item = await ctx.messageModel.findMessageQueriesById(input.messageId);
         console.log('[semanticSearchForChat] Message query found:', !!item);
 
-        const { model, provider } =
+        const embeddingConfig =
           getServerDefaultFilesConfig().embeddingModel || DEFAULT_FILE_EMBEDDING_MODEL_ITEM;
-        console.log('[semanticSearchForChat] Using model:', model, 'provider:', provider);
+        const { model, provider } = embeddingConfig;
+        const dimensions = getEmbeddingDimensions(embeddingConfig);
+        console.log(
+          '[semanticSearchForChat] Using model:',
+          model,
+          'provider:',
+          provider,
+          'dimensions:',
+          dimensions,
+        );
 
         let embedding: number[];
         let ragQueryId: string;
@@ -253,7 +274,7 @@ export const chunkRouter = router({
           console.log('[semanticSearchForChat] Query length after truncation:', query.length);
 
           const embeddings = await agentRuntime.embeddings({
-            dimensions: 1024,
+            dimensions,
             input: query,
             model,
           });
