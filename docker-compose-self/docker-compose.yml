@@ -135,6 +135,8 @@ services:
       - 'FEATURE_FLAGS=${FEATURE_FLAGS}'
       # Pass the LOBE_PORT to the container to be used by startServer.js if needed
       - 'PORT=${LOBE_PORT}'
+      # Fix SSL certificate error for Azure App Gateway/WAF
+      - 'NODE_TLS_REJECT_UNAUTHORIZED=0'
     env_file:
       - .env
     restart: always

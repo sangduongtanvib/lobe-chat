@@ -12,6 +12,7 @@ const buildWithDocker = process.env.DOCKER === 'true';
 const isDesktop = process.env.NEXT_PUBLIC_IS_DESKTOP_APP === '1';
 const enableReactScan = !!process.env.REACT_SCAN_MONITOR_API_KEY;
 const isUsePglite = process.env.NEXT_PUBLIC_CLIENT_DB === 'pglite';
+const disableWAF = process.env.DISABLE_WAF === 'true';
 
 // if you need to proxy the api endpoint to remote server
 
@@ -46,6 +47,11 @@ const nextConfig: NextConfig = {
 
     webVitalsAttribution: ['CLS', 'LCP'],
   },
+  // Trust proxy for SSL termination (Azure Application Gateway)
+  ...(isProd && {
+    poweredByHeader: false,
+    trailingSlash: false,
+  }),
   async headers() {
     return [
       {
@@ -210,7 +216,7 @@ const nextConfig: NextConfig = {
     },
   ],
   async rewrites() {
-    return [
+    const baseRewrites = [
       // Redirect CDN font requests to local fonts
       {
         destination: '/fonts/webfont-mono.css',
@@ -233,7 +239,15 @@ const nextConfig: NextConfig = {
         destination: '/emojis/:path*',
         source: '/api/emojis/:path*',
       },
+    ];
 
+    // If WAF is disabled, return only base rewrites
+    if (disableWAF) {
+      return baseRewrites;
+    }
+
+    // WAF-friendly rewrites (only when WAF is enabled)
+    const wafRewrites = [
       // ===== WAF-FRIENDLY URL MAPPINGS =====
       // Core Next.js static files rewrites
       {
@@ -331,6 +345,8 @@ const nextConfig: NextConfig = {
         source: '/decode/:path*',
       },
     ];
+
+    return [...baseRewrites, ...wafRewrites];
   },
   // when external packages in dev mode with turbopack, this config will lead to bundle error
   serverExternalPackages: isProd ? ['@electric-sql/pglite'] : undefined,
@@ -343,14 +359,16 @@ const nextConfig: NextConfig = {
       layers: true,
     };
 
-    // Add WAF HTML rewriter plugin for both development and production
-    config.plugins = config.plugins || [];
-    config.plugins.push(
-      new WAFHTMLRewriterPlugin({
-        development: !isProd,
-        production: isProd,
-      }),
-    );
+    // Add WAF HTML rewriter plugin for both development and production (only if WAF is enabled)
+    if (!disableWAF) {
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new WAFHTMLRewriterPlugin({
+          development: !isProd,
+          production: isProd,
+        }),
+      );
+    }
 
     // 开启该插件会导致 pglite 的 fs bundler 被改表
     if (enableReactScan && !isUsePglite) {

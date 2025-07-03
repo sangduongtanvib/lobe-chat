@@ -141,6 +141,7 @@ services:
       - 'FEATURE_FLAGS=-welcome_suggest,+webrtc_sync,+dalle,+search_engine,+rag_eval,+pin_list'
       # Pass the LOBE_PORT to the container to be used by startServer.js if needed
       - 'PORT=${LOBE_PORT}'
+      - 'NODE_TLS_REJECT_UNAUTHORIZED=0'
     env_file:
       - .env
     restart: always

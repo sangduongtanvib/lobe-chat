@@ -69,6 +69,19 @@ const defaultMiddleware = (request: NextRequest) => {
   const url = new URL(request.url);
   logDefault('Processing request: %s %s', request.method, request.url);
 
+  // Handle SSL termination from Azure Application Gateway
+  const forwardedProto = request.headers.get('x-forwarded-proto');
+  const forwardedHost = request.headers.get('x-forwarded-host');
+
+  // Force HTTPS redirect if not secure and forwarded from HTTPS
+  if (forwardedProto === 'https' && url.protocol === 'http:') {
+    url.protocol = 'https:';
+    if (forwardedHost) {
+      url.host = forwardedHost;
+    }
+    logDefault('SSL termination: Correcting protocol from HTTP to HTTPS');
+  }
+
   // Skip middleware for variant routes to prevent double rewriting
   if (url.pathname.startsWith('/v/') && url.pathname.includes('__')) {
     logDefault('Skipping middleware for variant route: %s', url.pathname);
@@ -228,7 +241,18 @@ const defaultMiddleware = (request: NextRequest) => {
 
   url.pathname = nextPathname;
 
-  return NextResponse.rewrite(url, { status: 200 });
+  const response = NextResponse.rewrite(url, { status: 200 });
+
+  // Add SSL-friendly headers for Azure Application Gateway (reuse existing variables)
+  if (forwardedProto === 'https') {
+    response.headers.set('X-Forwarded-Proto', 'https');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+    // Ensure secure cookies when behind HTTPS proxy
+    response.headers.set('X-Proxy-SSL', 'true');
+  }
+
+  return response;
 };
 
 // Thay đổi isProtectedRoute để bảo vệ tất cả các routes, không chỉ các routes được liệt kê
