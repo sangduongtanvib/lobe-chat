@@ -43,7 +43,20 @@ docker run -d \
   lobehub/lobe-chat
 ```
 
-## 2. Tắt WAF tạm thời để test
+## 2. Fix Self-Signed Certificate Issues
+
+Nếu gặp lỗi `SELF_SIGNED_CERT_IN_CHAIN`:
+
+```bash
+# Allow self-signed certificates (ONLY in development/testing)
+NODE_TLS_REJECT_UNAUTHORIZED=0
+
+# Combine với DISABLE_WAF để test
+DISABLE_WAF=true
+NODE_TLS_REJECT_UNAUTHORIZED=0
+```
+
+## 3. Tắt WAF tạm thời để test
 
 Nếu nghi ngờ WAF rewrites gây vấn đề:
 
@@ -52,7 +65,7 @@ Nếu nghi ngờ WAF rewrites gây vấn đề:
 DISABLE_WAF=true
 ```
 
-## 3. Azure Application Gateway Requirements
+## 4. Azure Application Gateway Requirements
 
 Đảm bảo Azure Application Gateway gửi đúng headers:
 
@@ -75,7 +88,7 @@ DISABLE_WAF=true
 - **Backend SSL**: Disabled
 - **Cookie-based session affinity**: Enabled (nếu cần)
 
-## 4. Testing Commands
+## 5. Testing Commands
 
 ### Test container internal:
 
@@ -110,7 +123,7 @@ docker logs lobe-chat-container | grep -i ssl
 docker logs lobe-chat-container | grep -i middleware
 ```
 
-## 5. Common Issues & Solutions
+## 6. Common Issues & Solutions
 
 ### Issue: Mixed Content Errors
 
@@ -128,7 +141,7 @@ docker logs lobe-chat-container | grep -i middleware
 
 **Giải pháp**: Đảm bảo `secure` flag được set đúng với HTTPS
 
-## 6. Debug Mode
+## 7. Debug Mode
 
 Để debug chi tiết:
 
@@ -140,7 +153,7 @@ DEBUG=lobe-middleware* npm start
 docker run -e DEBUG=lobe-middleware* lobehub/lobe-chat
 ```
 
-## 7. Production vs Development
+## 8. Production vs Development
 
 ### Development:
 
@@ -158,7 +171,7 @@ FORCE_HTTPS=true
 # KHÔNG set NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
 
-## 8. Verification
+## 9. Verification
 
 Sau khi apply fix, verify:
 

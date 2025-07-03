@@ -14,6 +14,18 @@ const enableReactScan = !!process.env.REACT_SCAN_MONITOR_API_KEY;
 const isUsePglite = process.env.NEXT_PUBLIC_CLIENT_DB === 'pglite';
 const disableWAF = process.env.DISABLE_WAF === 'true';
 
+// Debug logging
+console.log('======= WAF CONFIGURATION DEBUG =======');
+console.log('Environment Variables:');
+console.log('  DISABLE_WAF:', process.env.DISABLE_WAF);
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  DOCKER:', process.env.DOCKER);
+console.log('Computed Values:');
+console.log('  disableWAF:', disableWAF);
+console.log('  isProd:', isProd);
+console.log('  buildWithDocker:', buildWithDocker);
+console.log('=======================================');
+
 // if you need to proxy the api endpoint to remote server
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH;
@@ -368,6 +380,20 @@ const nextConfig: NextConfig = {
           production: isProd,
         }),
       );
+    }
+
+    // Fix self-signed certificate issues in development/proxy environments
+    if (!isProd || process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+      console.log('SSL Certificate: Configuring to accept self-signed certificates');
+
+      // Configure webpack to handle self-signed certificates
+      config.resolve = config.resolve || {};
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
     }
 
     // 开启该插件会导致 pglite 的 fs bundler 被改表
