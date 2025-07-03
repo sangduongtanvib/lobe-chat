@@ -179,17 +179,27 @@ const RootLayout = async ({ children, params, modal }: RootLayoutProps) => {
               
               // Register WAF Service Worker immediately (don't wait for load)
               if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/waf-sw.js')
-                  .then(function(registration) {
-                    console.log('WAF SW: Registration successful', registration.scope);
-                    // Force immediate activation
-                    if (registration.waiting) {
-                      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                    }
-                  })
-                  .catch(function(error) {
-                    console.log('WAF SW: Registration failed', error);
-                  });
+                // Only register service worker on HTTPS or localhost to prevent SSL errors
+                const isSecureContext = window.location.protocol === 'https:' || 
+                                       window.location.hostname === 'localhost' ||
+                                       window.location.hostname === '127.0.0.1';
+                
+                if (isSecureContext) {
+                  navigator.serviceWorker.register('/waf-sw.js')
+                    .then(function(registration) {
+                      console.log('WAF SW: Registration successful', registration.scope);
+                      // Force immediate activation
+                      if (registration.waiting) {
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                      }
+                    })
+                    .catch(function(error) {
+                      console.warn('WAF SW: Registration failed', error);
+                      // Don't throw error to prevent SSL issues
+                    });
+                } else {
+                  console.warn('WAF SW: Skipping service worker registration on insecure context');
+                }
               }
             `,
           }}

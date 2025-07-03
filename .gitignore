@@ -66,16 +66,19 @@ next-env.d.ts
 .next
 .env
 */**/.env
-public/*.js
-public/sitemap.xml
-public/sitemap-index.xml
+# public/*.js
+# Exception: Allow WAF service worker to be tracked
+# !public/waf-sw.js
+# public/sitemap.xml
+# public/sitemap-index.xml
 bun.lockb
 sitemap*.xml
 robots.txt
 
 # Serwist
-public/sw*
-public/swe-worker*
+# public/sw*
+# # Exception: Allow WAF service worker to be tracked
+# public/swe-worker*
 
 *.patch
 *.pdf
