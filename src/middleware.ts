@@ -13,7 +13,6 @@ import { Locales } from '@/locales/resources';
 import { parseBrowserLanguage } from '@/utils/locale';
 import { parseDefaultThemeFromCountry } from '@/utils/server/geo';
 import { RouteVariants } from '@/utils/server/routeVariants';
-import { handleWAFFriendlyChunks } from '@/utils/waf-chunk-handler';
 
 import { OAUTH_AUTHORIZED } from './const/auth';
 import { oidcEnv } from './envs/oidc';
@@ -75,33 +74,33 @@ const defaultMiddleware = (request: NextRequest) => {
     return NextResponse.next();
   }
 
-  // Handle WAF-friendly static chunks first
-  const wafResponse = handleWAFFriendlyChunks(request);
-  if (wafResponse) {
-    logDefault('Served WAF-friendly chunk: %s', url.pathname);
-    return wafResponse;
-  }
+  // WAF-friendly static chunks DISABLED
+  // const wafResponse = handleWAFFriendlyChunks(request);
+  // if (wafResponse) {
+  //   logDefault('Served WAF-friendly chunk: %s', url.pathname);
+  //   return wafResponse;
+  // }
 
-  // Handle WAF-friendly static files rewrite - comprehensive coverage
-  const wafFriendlyPaths = [
-    { path: '/static/js/', target: '/_next/static/chunks/' },
-    { path: '/static/css/', target: '/_next/static/css/' },
-    { path: '/static/media/', target: '/_next/static/media/' },
-    { path: '/nextjs-static/', target: '/_next/static/' },
-    { path: '/nextjs-chunks/', target: '/_next/static/chunks/' },
-    { path: '/js-chunks/', target: '/_next/static/chunks/' },
-    { path: '/safe-chunks/', target: '/_next/static/chunks/' },
-    { path: '/waf-safe/', target: '/_next/static/' },
-  ];
+  // WAF-friendly static files rewrite DISABLED
+  // const wafFriendlyPaths = [
+  //   { path: '/static/js/', target: '/_next/static/chunks/' },
+  //   { path: '/static/css/', target: '/_next/static/css/' },
+  //   { path: '/static/media/', target: '/_next/static/media/' },
+  //   { path: '/nextjs-static/', target: '/_next/static/' },
+  //   { path: '/nextjs-chunks/', target: '/_next/static/chunks/' },
+  //   { path: '/js-chunks/', target: '/_next/static/chunks/' },
+  //   { path: '/safe-chunks/', target: '/_next/static/chunks/' },
+  //   { path: '/waf-safe/', target: '/_next/static/' },
+  // ];
 
-  const matchedWafPath = wafFriendlyPaths.find(({ path }) => url.pathname.startsWith(path));
+  // const matchedWafPath = wafFriendlyPaths.find(({ path }) => url.pathname.startsWith(path));
 
-  if (matchedWafPath) {
-    const originalPath = url.pathname.replace(matchedWafPath.path, matchedWafPath.target);
-    url.pathname = originalPath;
-    logDefault('Rewriting WAF-friendly static file: %s -> %s', request.url, url.pathname);
-    return NextResponse.rewrite(url);
-  }
+  // if (matchedWafPath) {
+  //   const originalPath = url.pathname.replace(matchedWafPath.path, matchedWafPath.target);
+  //   url.pathname = originalPath;
+  //   logDefault('Rewriting WAF-friendly static file: %s -> %s', request.url, url.pathname);
+  //   return NextResponse.rewrite(url);
+  // }
 
   // Intercept CDN font requests and redirect to local fonts
   if (url.hostname === 'registry.npmmirror.com') {

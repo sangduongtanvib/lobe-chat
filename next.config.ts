@@ -4,8 +4,8 @@ import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
 import ReactComponentName from 'react-scan/react-component-name/webpack';
 
-// Import WAF HTML rewriter plugin
-const WAFHTMLRewriterPlugin = require('./src/utils/waf-html-rewriter-plugin');
+// Import WAF HTML rewriter plugin (DISABLED)
+// const WAFHTMLRewriterPlugin = require('./src/utils/waf-html-rewriter-plugin');
 
 const isProd = process.env.NODE_ENV === 'production';
 const buildWithDocker = process.env.DOCKER === 'true';
@@ -224,14 +224,14 @@ const nextConfig: NextConfig = {
       layers: true,
     };
 
-    // Add WAF HTML rewriter plugin for both development and production
-    config.plugins = config.plugins || [];
-    config.plugins.push(
-      new WAFHTMLRewriterPlugin({
-        development: !isProd,
-        production: isProd,
-      }),
-    );
+    // WAF HTML rewriter plugin DISABLED
+    // config.plugins = config.plugins || [];
+    // config.plugins.push(
+    //   new WAFHTMLRewriterPlugin({
+    //     development: !isProd,
+    //     production: isProd,
+    //   }),
+    // );
 
     // 开启该插件会导致 pglite 的 fs bundler 被改表
     if (enableReactScan && !isUsePglite) {
