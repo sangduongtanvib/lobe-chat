@@ -34,6 +34,29 @@ config.overrides = [
       'mdx/code-blocks': false,
     },
   },
+  {
+    env: {
+      serviceworker: true,
+    },
+    files: ['public/sw.js'],
+    globals: {
+      FetchEvent: 'readonly',
+      registration: 'readonly',
+      self: 'readonly',
+    },
+    rules: {
+      'no-empty': 'off',
+      'no-param-reassign': 'off',
+      'no-promise-executor-return': 'off',
+      'no-undef': 'off',
+      'unicorn/consistent-function-scoping': 'off',
+      'unicorn/no-await-expression-member': 'off',
+      'unicorn/no-negation-in-equality-check': 'off',
+      'unicorn/no-this-assignment': 'off',
+      'unicorn/no-unreadable-iife': 'off',
+      'unused-imports/no-unused-vars': 'off',
+    },
+  },
 ];
 
 module.exports = config;
