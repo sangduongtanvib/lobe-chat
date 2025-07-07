@@ -3,9 +3,14 @@ import { withSentryConfig } from '@sentry/nextjs';
 import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
 import ReactComponentName from 'react-scan/react-component-name/webpack';
+// import { withSentryConfig } from '@sentry/nextjs';
 
-// Import WAF HTML rewriter plugin
-const WAFHTMLRewriterPlugin = require('./src/utils/waf-html-rewriter-plugin');
+// DISABLED: WAF functionality removed to prevent SSL issues
+// const WAFHTMLRewriterPlugin = require('./src/utils/waf-html-rewriter-plugin');
+
+// const { ANALYZE } = process.env;
+// const { isCI } = require('ci-info');
+// const path = require('node:path');
 
 const isProd = process.env.NODE_ENV === 'production';
 const buildWithDocker = process.env.DOCKER === 'true';
@@ -234,7 +239,9 @@ const nextConfig: NextConfig = {
         source: '/api/emojis/:path*',
       },
 
-      // ===== WAF-FRIENDLY URL MAPPINGS =====
+      // ===== WAF-FRIENDLY URL MAPPINGS DISABLED =====
+      // All WAF rewrites commented out to prevent SSL certificate issues
+      /*
       // Core Next.js static files rewrites
       {
         destination: '/_next/static/chunks/:path*',
@@ -330,6 +337,7 @@ const nextConfig: NextConfig = {
         ],
         source: '/decode/:path*',
       },
+      */
     ];
   },
   // when external packages in dev mode with turbopack, this config will lead to bundle error
@@ -344,6 +352,8 @@ const nextConfig: NextConfig = {
     };
 
     // Add WAF HTML rewriter plugin for both development and production
+    // DISABLED: WAF rewriter causes SSL certificate issues
+    /*
     config.plugins = config.plugins || [];
     config.plugins.push(
       new WAFHTMLRewriterPlugin({
@@ -351,6 +361,8 @@ const nextConfig: NextConfig = {
         production: isProd,
       }),
     );
+    */
+    console.log('WAF HTML Rewriter Plugin: DISABLED for SSL compatibility');
 
     // 开启该插件会导致 pglite 的 fs bundler 被改表
     if (enableReactScan && !isUsePglite) {

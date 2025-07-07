@@ -75,6 +75,25 @@ const defaultMiddleware = (request: NextRequest) => {
     return NextResponse.next();
   }
 
+  // DISABLE ALL WAF FUNCTIONALITY to prevent SSL issues
+  const disableWAF = true; // Force disable WAF middleware
+  
+  if (disableWAF) {
+    logDefault('WAF middleware DISABLED for SSL compatibility: %s', url.pathname);
+    return NextResponse.next();
+  }
+
+  // WAF functionality commented out below
+  /*
+  // BYPASS WAF for SSL certificate issues in production
+  const bypassWAF = process.env.BYPASS_WAF_MIDDLEWARE === '1' || 
+                    process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0';
+  
+  if (bypassWAF && url.pathname.includes('/_next/static/')) {
+    logDefault('Bypassing WAF middleware for SSL compatibility: %s', url.pathname);
+    return NextResponse.next();
+  }
+
   // Handle WAF-friendly static chunks first
   const wafResponse = handleWAFFriendlyChunks(request);
   if (wafResponse) {
@@ -102,6 +121,7 @@ const defaultMiddleware = (request: NextRequest) => {
     logDefault('Rewriting WAF-friendly static file: %s -> %s', request.url, url.pathname);
     return NextResponse.rewrite(url);
   }
+  */
 
   // Intercept CDN font requests and redirect to local fonts
   if (url.hostname === 'registry.npmmirror.com') {

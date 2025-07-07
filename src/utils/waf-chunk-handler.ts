@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * WAF-friendly static file handler for middleware (Edge Runtime)
- * This component handles serving WAF-friendly static URLs by mapping them back to original paths
- * Fixed: Added better error handling for self-signed certificate issues
+ * WAF-friendly static file handler for middleware (Edge Runtime) - DISABLED
+ * This component is disabled to prevent SSL certificate issues
  */
-export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | null {
+export function handleWAFFriendlyChunks(_request: NextRequest): NextResponse | null {
+  // DISABLED: WAF chunk handling causes SSL certificate issues
+  // Return null to disable all WAF functionality
+  
+  console.log('WAF Chunk Handler: DISABLED for SSL compatibility');
+  
+  return null;
+  
+  /* Original WAF functionality commented out
   const url = new URL(request.url);
 
   // Handle multiple WAF-friendly paths - comprehensive coverage
@@ -148,4 +155,5 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
 
   //console.log('WAF Handler: Direct mapping', url.pathname, '->', rewriteUrl.pathname);
   return NextResponse.rewrite(rewriteUrl);
+  */
 }

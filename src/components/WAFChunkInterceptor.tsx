@@ -3,10 +3,19 @@
 import Script from 'next/script';
 
 /**
- * WAF Static File Interceptor Component
- * Injects client-side script to handle WAF-friendly static file URL rewriting
+ * WAF Static File Interceptor Component - DISABLED
+ * Component disabled to prevent SSL certificate issues
  */
 export default function WAFChunkInterceptor() {
+  // DISABLED: WAF interceptor causes SSL certificate issues
+  // Return null to disable all URL rewriting functionality
+  
+  console.log('WAF Chunk Interceptor: DISABLED for SSL compatibility');
+  
+  return null;
+  
+  /*
+  // Original WAF interceptor code commented out
   const wafScript = `
     (function() {
       // Only run in browser environment
@@ -177,4 +186,5 @@ export default function WAFChunkInterceptor() {
       strategy="afterInteractive"
     />
   );
+  */
 }

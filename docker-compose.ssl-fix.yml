@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  lobe-chat:
+    image: your-image-name  # Thay thế bằng tên image của bạn
+    container_name: lobe-chat-ssl-fixed
+    ports:
+      - "3210:3210"
+    environment:
+      # SSL Configuration - Fix self-signed certificate errors
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - NODE_EXTRA_CA_CERTS=""
+      - SSL_CERT_DIR="/etc/ssl/certs/ca-certificates.crt"
+      
+      # Node.js Configuration
+      - NODE_ENV=production
+      - NODE_OPTIONS="--dns-result-order=ipv4first --use-openssl-ca"
+      - NEXT_TELEMETRY_DISABLED=1
+      
+      # Application Configuration
+      - HOSTNAME=0.0.0.0
+      - PORT=3210
+      
+      # Service Worker Configuration (disable for SSL issues)
+      - NEXT_PUBLIC_SERVICE_WORKER_ENABLED=false
+      - WAF_ENABLE_SERVICE_WORKER=false
+      - WAF_DEBUG_MODE=false
+      
+      # WAF Bypass Configuration - Fix 500 errors
+      - BYPASS_WAF_MIDDLEWARE=1
+      - MIDDLEWARE_REWRITE_THROUGH_LOCAL=1
+      
+      # SSL Debug (set to 1 for troubleshooting)
+      - NODE_DEBUG_SSL=0
+      
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3210"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 
