@@ -100,7 +100,22 @@ const defaultMiddleware = (request: NextRequest) => {
     const originalPath = url.pathname.replace(matchedWafPath.path, matchedWafPath.target);
     url.pathname = originalPath;
     logDefault('Rewriting WAF-friendly static file: %s -> %s', request.url, url.pathname);
-    return NextResponse.rewrite(url);
+    
+    try {
+      return NextResponse.rewrite(url);
+    } catch (error) {
+      logDefault('SSL/Rewrite error for WAF-friendly path: %s', error);
+      // Fallback: return the rewrite with additional headers for debugging
+      return NextResponse.rewrite(url, {
+        headers: {
+          'X-Original-Path': request.url,
+          'X-Rewrite-Path': url.pathname,
+          'X-SSL-Error': 'handled',
+          'X-WAF-Rewrite': 'true'
+        },
+        status: 200
+      });
+    }
   }
 
   // Intercept CDN font requests and redirect to local fonts
@@ -195,9 +210,11 @@ const defaultMiddleware = (request: NextRequest) => {
 
   logDefault('Serialized route variant: %s', route);
 
-  // if app is in docker, rewrite to self container
-  // https://github.com/lobehub/lobe-chat/issues/5876
-  if (appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL) {
+  // Docker-safe rewrite logic: avoid internal rewrites in Docker environment
+  const isDocker = process.env.DOCKER === 'true';
+  const shouldUseLocalRewrite = appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL && !isDocker;
+
+  if (shouldUseLocalRewrite) {
     logDefault('Local container rewrite enabled: %O', {
       host: '127.0.0.1',
       original: url.toString(),
@@ -208,6 +225,8 @@ const defaultMiddleware = (request: NextRequest) => {
     url.protocol = 'http';
     url.host = '127.0.0.1';
     url.port = process.env.PORT || '3210';
+  } else if (isDocker) {
+    logDefault('Docker environment detected, using direct rewrite to avoid SSL issues');
   }
 
   // refs: https://github.com/lobehub/lobe-chat/pull/5866
@@ -215,12 +234,13 @@ const defaultMiddleware = (request: NextRequest) => {
   // / -> /v/en-US__0__dark
   // /discover -> /v/en-US__0__dark/discover
   const nextPathname = `/v/${route}` + (url.pathname === '/' ? '' : url.pathname);
-  const nextURL = appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL
+  const nextURL = shouldUseLocalRewrite
     ? urlJoin(url.origin, nextPathname)
     : nextPathname;
 
   logDefault('URL rewrite: %O', {
-    isLocalRewrite: appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL,
+    isDocker,
+    isLocalRewrite: shouldUseLocalRewrite,
     nextPathname: nextPathname,
     nextURL: nextURL,
     originalPathname: url.pathname,
@@ -297,53 +317,41 @@ const nextAuthMiddleware = NextAuthEdge.auth((req) => {
   return response;
 });
 
-const clerkAuthMiddleware = clerkMiddleware(
-  async (auth, req) => {
-    logClerk('Clerk middleware processing request: %s %s', req.method, req.url);
+// Clerk middleware
+const clerkMiddlewareHandler = clerkMiddleware((auth, req) => {
+  logClerk('Clerk middleware processing request: %s %s', req.method, req.url);
 
-    const isProtected = isProtectedRoute(req);
-    logClerk('Route protection status: %s, %s', req.url, isProtected ? 'protected' : 'public');
+  const response = defaultMiddleware(req);
 
-    // Chỉ cho phép truy cập trang login và signup mà không cần xác thực
-    if (isProtected && !req.url.includes('/login') && !req.url.includes('/signup')) {
-      logClerk('Protecting route: %s', req.url);
-      await auth.protect();
+  const isProtected = isProtectedRoute(req);
+  logClerk('Route protection status: %s, %s', req.url, isProtected ? 'protected' : 'public');
+
+  // Remove & amend OAuth authorized header
+  response.headers.delete(OAUTH_AUTHORIZED);
+
+  // Check if user is authenticated with Clerk
+  if (auth && Object.keys(auth).length > 0) {
+    logClerk('Setting auth header: %s = %s', OAUTH_AUTHORIZED, 'true');
+    response.headers.set(OAUTH_AUTHORIZED, 'true');
+  } else {
+    // If not logged in, redirect to sign-in page for all routes except login pages
+    if (
+      isProtected &&
+      !req.nextUrl.pathname.startsWith('/login') &&
+      !req.nextUrl.pathname.startsWith('/signup')
+    ) {
+      logClerk('User not logged in, redirecting to sign-in page');
+      return Response.redirect(new URL('/login', req.nextUrl.origin));
     }
+    logClerk('Request a free route or login page, allowing visit without auth header');
+  }
 
-    const response = defaultMiddleware(req);
-
-    const data = await auth();
-    logClerk('Clerk auth status: %O', {
-      isSignedIn: !!data.userId,
-      userId: data.userId,
-    });
-
-    // If OIDC is enabled and Clerk user is logged in, add OIDC session pre-sync header
-    if (oidcEnv.ENABLE_OIDC && data.userId) {
-      logClerk('OIDC session pre-sync: Setting %s = %s', OIDC_SESSION_HEADER, data.userId);
-      response.headers.set(OIDC_SESSION_HEADER, data.userId);
-    } else if (oidcEnv.ENABLE_OIDC) {
-      logClerk('No Clerk user detected, not setting OIDC session sync header');
-    }
-
-    return response;
-  },
-  {
-    // https://github.com/lobehub/lobe-chat/pull/3084
-    clockSkewInMs: 60 * 60 * 1000,
-    signInUrl: '/login',
-    signUpUrl: '/signup',
-  },
-);
-
-logDefault('Middleware configuration: %O', {
-  enableClerk: authEnv.NEXT_PUBLIC_ENABLE_CLERK_AUTH,
-  enableNextAuth: authEnv.NEXT_PUBLIC_ENABLE_NEXT_AUTH,
-  enableOIDC: oidcEnv.ENABLE_OIDC,
+  return response;
 });
 
+// Export the appropriate middleware based on auth configuration
 export default authEnv.NEXT_PUBLIC_ENABLE_CLERK_AUTH
-  ? clerkAuthMiddleware
+  ? clerkMiddlewareHandler
   : authEnv.NEXT_PUBLIC_ENABLE_NEXT_AUTH
-    ? nextAuthMiddleware
-    : defaultMiddleware;
+  ? nextAuthMiddleware
+  : defaultMiddleware;

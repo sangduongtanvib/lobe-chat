@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  lobe-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile.database
+    ports:
+      - "3210:3210"
+    environment:
+      # Docker environment flags
+      - DOCKER=true
+      - NODE_ENV=production
+      
+      # Disable local rewrite to avoid SSL issues
+      - MIDDLEWARE_REWRITE_THROUGH_LOCAL=0
+      
+      # SSL Configuration (backup)
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - NODE_TLS_CIPHER_SUITE=ALL
+      - NODE_TLS_SECURE_OPTIONS=0
+      - SSL_CERT_DIR=/etc/ssl/certs/ca-certificates.crt
+      
+      # Host configuration
+      - HOSTNAME=0.0.0.0
+      - PORT=3210
+      
+      # Add your other environment variables here
+      - ACCESS_CODE=your_access_code
+      - APP_URL=http://localhost:3210
+      
+      # Database configuration (if needed)
+      - DATABASE_DRIVER=node
+      - DATABASE_URL=your_database_url
+      
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3210/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+          
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3" 

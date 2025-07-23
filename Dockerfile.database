@@ -148,12 +148,15 @@ COPY --from=app / /
 ENV NODE_ENV="production" \
     NODE_OPTIONS="--dns-result-order=ipv4first --use-openssl-ca" \
     NODE_EXTRA_CA_CERTS="" \
-    NODE_TLS_REJECT_UNAUTHORIZED="" \
-    SSL_CERT_DIR="/etc/ssl/certs/ca-certificates.crt"
+    NODE_TLS_REJECT_UNAUTHORIZED="0" \
+    SSL_CERT_DIR="/etc/ssl/certs/ca-certificates.crt" \
+    NODE_TLS_CIPHER_SUITE="ALL" \
+    NODE_TLS_SECURE_OPTIONS="0"
 
-# Make the middleware rewrite through local as default
+# Disable local rewrite in Docker to avoid SSL issues with internal requests
 # refs: https://github.com/lobehub/lobe-chat/issues/5876
-ENV MIDDLEWARE_REWRITE_THROUGH_LOCAL="1"
+ENV MIDDLEWARE_REWRITE_THROUGH_LOCAL="0" \
+    DOCKER="true"
 
 # set hostname to localhost
 ENV HOSTNAME="0.0.0.0" \

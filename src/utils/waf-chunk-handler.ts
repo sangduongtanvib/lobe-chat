@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * WAF-friendly static file handler for middleware (Edge Runtime)
  * This component handles serving WAF-friendly static URLs by mapping them back to original paths
- * Fixed: Added better error handling for self-signed certificate issues
+ * Fixed: Added better error handling for self-signed certificate issues and Docker environment
  */
 export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | null {
   const url = new URL(request.url);
+  const isDocker = process.env.DOCKER === 'true';
 
   // Handle multiple WAF-friendly paths - comprehensive coverage
   const wafFriendlyPaths = [
@@ -25,7 +26,7 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
     return null;
   }
 
-  //console.log('WAF Handler: Processing request for', url.pathname);
+  console.log('WAF Handler: Processing request for', url.pathname, 'Docker:', isDocker);
 
   // Extract the filename
   const requestedFile = url.pathname.replace(matchedPath.path, '');
@@ -80,8 +81,22 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
     const rewriteUrl = new URL(request.url);
     rewriteUrl.pathname = `${matchedPath.target}${originalFilename}`;
 
-    //console.log('WAF Handler: Rewriting WAF-safe chunk', url.pathname, '->', rewriteUrl.pathname);
-    return NextResponse.rewrite(rewriteUrl);
+    console.log('WAF Handler: Rewriting WAF-safe chunk', url.pathname, '->', rewriteUrl.pathname);
+    
+    try {
+      // In Docker environment, use redirect instead of rewrite to avoid SSL issues
+      if (isDocker) {
+        console.log('WAF Handler: Docker environment detected, using redirect');
+        return NextResponse.redirect(rewriteUrl, 302);
+      }
+      
+      return NextResponse.rewrite(rewriteUrl);
+    } catch (error) {
+      console.error('WAF Handler: SSL/rewrite error:', error);
+      // Fallback: use redirect instead of rewrite
+      console.log('WAF Handler: Using redirect fallback');
+      return NextResponse.redirect(rewriteUrl, 302);
+    }
   }
 
   // Handle safe-chunks specific pattern for app variant conversation files
@@ -99,13 +114,22 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
       const rewriteUrl = new URL(request.url);
       rewriteUrl.pathname = `/_next/static/chunks/${originalFilename}`;
 
-      //console.log(
-      //'WAF Handler: Rewriting app variant chunk',
-      //url.pathname,
-      //'->',
-      //rewriteUrl.pathname,
-      //);
-      return NextResponse.rewrite(rewriteUrl);
+      console.log(
+        'WAF Handler: Rewriting app variant chunk',
+        url.pathname,
+        '->',
+        rewriteUrl.pathname,
+      );
+      
+      try {
+        if (isDocker) {
+          return NextResponse.redirect(rewriteUrl, 302);
+        }
+        return NextResponse.rewrite(rewriteUrl);
+      } catch (error) {
+        console.error('WAF Handler: App variant rewrite error:', error);
+        return NextResponse.redirect(rewriteUrl, 302);
+      }
     }
   }
 
@@ -129,23 +153,38 @@ export function handleWAFFriendlyChunks(request: NextRequest): NextResponse | nu
       const rewriteUrl = new URL(request.url);
       rewriteUrl.pathname = `/_next/static/chunks/${originalFilename}`;
 
-      //console.log(
-      //'WAF Handler: Rewriting complex app variant pattern',
-      //url.pathname,
-      //'->',
-      //rewriteUrl.pathname,
-      //);
-      return NextResponse.rewrite(rewriteUrl);
+      console.log(
+        'WAF Handler: Rewriting complex app variant pattern',
+        url.pathname,
+        '->',
+        rewriteUrl.pathname,
+      );
+      
+      try {
+        if (isDocker) {
+          return NextResponse.redirect(rewriteUrl, 302);
+        }
+        return NextResponse.rewrite(rewriteUrl);
+      } catch (error) {
+        console.error('WAF Handler: Complex pattern rewrite error:', error);
+        return NextResponse.redirect(rewriteUrl, 302);
+      }
     }
   }
-
-  // Check if this is a WAF-friendly filename (contains our replacement patterns) - duplicate handling removed
-  // This is now handled above for all WAF-friendly patterns
 
   // For other paths, just map directly to the target
   const rewriteUrl = new URL(request.url);
   rewriteUrl.pathname = `${matchedPath.target}${requestedFile}`;
 
-  //console.log('WAF Handler: Direct mapping', url.pathname, '->', rewriteUrl.pathname);
-  return NextResponse.rewrite(rewriteUrl);
+  console.log('WAF Handler: Direct mapping', url.pathname, '->', rewriteUrl.pathname);
+  
+  try {
+    if (isDocker) {
+      return NextResponse.redirect(rewriteUrl, 302);
+    }
+    return NextResponse.rewrite(rewriteUrl);
+  } catch (error) {
+    console.error('WAF Handler: Direct mapping error:', error);
+    return NextResponse.redirect(rewriteUrl, 302);
+  }
 }

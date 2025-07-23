@@ -112,6 +112,17 @@ services:
         condition: service_started
 
     environment:
+      # Docker environment flags - Fix SSL issues
+      - 'DOCKER=true'
+      - 'MIDDLEWARE_REWRITE_THROUGH_LOCAL=0'
+      
+      # SSL Configuration - Backup fix
+      - 'NODE_TLS_REJECT_UNAUTHORIZED=0'
+      - 'NODE_TLS_CIPHER_SUITE=ALL'
+      - 'NODE_TLS_SECURE_OPTIONS=0'
+      - 'SSL_CERT_DIR=/etc/ssl/certs/ca-certificates.crt'
+      
+      # Application configuration
       - 'ENABLE_OPENAI=0'
       - 'NEXT_AUTH_SSO_PROVIDERS=casdoor'
       - 'KEY_VAULTS_SECRET=Kix2wcUONd4CX51E/ZPAd36BqM4wzJgKjPtz2sGztqQ='
@@ -144,6 +155,13 @@ services:
     env_file:
       - .env
     restart: always
+    # Health check for the lobe service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${LOBE_PORT}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     entrypoint: >
       /bin/sh -c "
         /bin/node /app/startServer.js &
