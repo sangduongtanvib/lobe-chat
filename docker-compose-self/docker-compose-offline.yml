@@ -116,11 +116,18 @@ services:
       - 'DOCKER=true'
       - 'MIDDLEWARE_REWRITE_THROUGH_LOCAL=0'
       
-      # SSL Configuration - Backup fix
+      # SSL Configuration - Fix self-signed certificate issues
       - 'NODE_TLS_REJECT_UNAUTHORIZED=0'
       - 'NODE_TLS_CIPHER_SUITE=ALL'
       - 'NODE_TLS_SECURE_OPTIONS=0'
       - 'SSL_CERT_DIR=/etc/ssl/certs/ca-certificates.crt'
+      
+      # Canvas polyfill configuration for PDF.js
+      - 'NODE_OPTIONS=--dns-result-order=ipv4first --use-openssl-ca'
+      - 'NODE_EXTRA_CA_CERTS='
+      
+      # WAF and proxy settings
+      - 'DISABLE_WAF=true'
       
       # Application configuration
       - 'ENABLE_OPENAI=0'

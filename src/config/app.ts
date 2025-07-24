@@ -48,7 +48,6 @@ export const getAppConfig = () => {
 
       APP_URL: z.string().optional(),
       VERCEL_EDGE_CONFIG: z.string().optional(),
-      MIDDLEWARE_REWRITE_THROUGH_LOCAL: z.boolean().optional(),
 
       CDN_USE_GLOBAL: z.boolean().optional(),
       CUSTOM_FONT_FAMILY: z.string().optional(),
@@ -81,7 +80,6 @@ export const getAppConfig = () => {
       VERCEL_EDGE_CONFIG: process.env.VERCEL_EDGE_CONFIG,
 
       APP_URL,
-      MIDDLEWARE_REWRITE_THROUGH_LOCAL: process.env.MIDDLEWARE_REWRITE_THROUGH_LOCAL === '1',
 
       CUSTOM_FONT_FAMILY: process.env.CUSTOM_FONT_FAMILY,
       CUSTOM_FONT_URL: process.env.CUSTOM_FONT_URL,

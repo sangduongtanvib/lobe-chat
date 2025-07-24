@@ -2,9 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import debug from 'debug';
 import { NextRequest, NextResponse } from 'next/server';
 import { UAParser } from 'ua-parser-js';
-import urlJoin from 'url-join';
 
-import { appEnv } from '@/config/app';
 import { authEnv } from '@/config/auth';
 import { LOBE_LOCALE_COOKIE } from '@/const/locale';
 import { LOBE_THEME_APPEARANCE } from '@/const/theme';
@@ -13,7 +11,6 @@ import { Locales } from '@/locales/resources';
 import { parseBrowserLanguage } from '@/utils/locale';
 import { parseDefaultThemeFromCountry } from '@/utils/server/geo';
 import { RouteVariants } from '@/utils/server/routeVariants';
-import { handleWAFFriendlyChunks } from '@/utils/waf-chunk-handler';
 
 import { OAUTH_AUTHORIZED } from './const/auth';
 import { oidcEnv } from './envs/oidc';
@@ -30,15 +27,10 @@ export const config = {
   matcher: [
     // include any files in the api or trpc folders that might have an extension
     '/(api|trpc|webapi)(.*)',
-    // WAF-friendly static file paths - comprehensive coverage
-    '/static/js/(.*)',
-    '/static/css/(.*)',
-    '/static/media/(.*)',
-    '/nextjs-static/(.*)',
-    '/nextjs-chunks/(.*)',
-    '/js-chunks/(.*)',
-    '/safe-chunks/(.*)',
-    '/waf-safe/(.*)',
+    // WAF-friendly static file paths (handled by Next.js rewrites + symlinks)  
+    '/chunks/(.*)',
+    '/styles/(.*)',
+    '/media/(.*)',
     // include the /
     '/',
     '/discover',
@@ -63,59 +55,41 @@ export const config = {
   ],
 };
 
-const backendApiEndpoints = ['/api', '/trpc', '/webapi', '/oidc'];
+// Check if request should skip middleware processing
+const shouldSkipMiddleware = (request: NextRequest): boolean => {
+  const url = new URL(request.url);
+  
+  // Skip variant routes to prevent double rewriting
+  if (url.pathname.startsWith('/v/') && url.pathname.includes('__')) {
+    return true;
+  }
+
+  // Skip API endpoints
+  const backendApiEndpoints = ['/api', '/trpc', '/webapi', '/oidc'];
+  if (backendApiEndpoints.some((path) => url.pathname.startsWith(path))) {
+    return true;
+  }
+
+  // Skip auth routes
+  if (
+    url.pathname.startsWith('/next-auth') ||
+    url.pathname.startsWith('/login') ||
+    url.pathname.startsWith('/signup')
+  ) {
+    return true;
+  }
+
+  return false;
+};
 
 const defaultMiddleware = (request: NextRequest) => {
   const url = new URL(request.url);
   logDefault('Processing request: %s %s', request.method, request.url);
 
-  // Skip middleware for variant routes to prevent double rewriting
-  if (url.pathname.startsWith('/v/') && url.pathname.includes('__')) {
-    logDefault('Skipping middleware for variant route: %s', url.pathname);
+  // Check if we should skip middleware
+  if (shouldSkipMiddleware(request)) {
+    logDefault('Skipping middleware for: %s', url.pathname);
     return NextResponse.next();
-  }
-
-  // Handle WAF-friendly static chunks first
-  const wafResponse = handleWAFFriendlyChunks(request);
-  if (wafResponse) {
-    logDefault('Served WAF-friendly chunk: %s', url.pathname);
-    return wafResponse;
-  }
-
-  // Handle WAF-friendly static files rewrite - comprehensive coverage
-  const wafFriendlyPaths = [
-    { path: '/static/js/', target: '/_next/static/chunks/' },
-    { path: '/static/css/', target: '/_next/static/css/' },
-    { path: '/static/media/', target: '/_next/static/media/' },
-    { path: '/nextjs-static/', target: '/_next/static/' },
-    { path: '/nextjs-chunks/', target: '/_next/static/chunks/' },
-    { path: '/js-chunks/', target: '/_next/static/chunks/' },
-    { path: '/safe-chunks/', target: '/_next/static/chunks/' },
-    { path: '/waf-safe/', target: '/_next/static/' },
-  ];
-
-  const matchedWafPath = wafFriendlyPaths.find(({ path }) => url.pathname.startsWith(path));
-
-  if (matchedWafPath) {
-    const originalPath = url.pathname.replace(matchedWafPath.path, matchedWafPath.target);
-    url.pathname = originalPath;
-    logDefault('Rewriting WAF-friendly static file: %s -> %s', request.url, url.pathname);
-    
-    try {
-      return NextResponse.rewrite(url);
-    } catch (error) {
-      logDefault('SSL/Rewrite error for WAF-friendly path: %s', error);
-      // Fallback: return the rewrite with additional headers for debugging
-      return NextResponse.rewrite(url, {
-        headers: {
-          'X-Original-Path': request.url,
-          'X-Rewrite-Path': url.pathname,
-          'X-SSL-Error': 'handled',
-          'X-WAF-Rewrite': 'true'
-        },
-        status: 200
-      });
-    }
   }
 
   // Intercept CDN font requests and redirect to local fonts
@@ -161,22 +135,6 @@ const defaultMiddleware = (request: NextRequest) => {
     }
   }
 
-  // skip all api requests
-  if (backendApiEndpoints.some((path) => url.pathname.startsWith(path))) {
-    logDefault('Skipping API request: %s', url.pathname);
-    return NextResponse.next();
-  }
-
-  // skip auth routes (NextAuth, Clerk)
-  if (
-    url.pathname.startsWith('/next-auth') ||
-    url.pathname.startsWith('/login') ||
-    url.pathname.startsWith('/signup')
-  ) {
-    logDefault('Skipping auth route: %s', url.pathname);
-    return NextResponse.next();
-  }
-
   // 1. Read user preferences from cookies
   const theme =
     request.cookies.get(LOBE_THEME_APPEARANCE)?.value || parseDefaultThemeFromCountry(request);
@@ -210,45 +168,20 @@ const defaultMiddleware = (request: NextRequest) => {
 
   logDefault('Serialized route variant: %s', route);
 
-  // Docker-safe rewrite logic: avoid internal rewrites in Docker environment
-  const isDocker = process.env.DOCKER === 'true';
-  const shouldUseLocalRewrite = appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL && !isDocker;
-
-  if (shouldUseLocalRewrite) {
-    logDefault('Local container rewrite enabled: %O', {
-      host: '127.0.0.1',
-      original: url.toString(),
-      port: process.env.PORT || '3210',
-      protocol: 'http',
-    });
-
-    url.protocol = 'http';
-    url.host = '127.0.0.1';
-    url.port = process.env.PORT || '3210';
-  } else if (isDocker) {
-    logDefault('Docker environment detected, using direct rewrite to avoid SSL issues');
-  }
-
   // refs: https://github.com/lobehub/lobe-chat/pull/5866
   // new handle segment rewrite: /v/${route}${originalPathname}
   // / -> /v/en-US__0__dark
   // /discover -> /v/en-US__0__dark/discover
   const nextPathname = `/v/${route}` + (url.pathname === '/' ? '' : url.pathname);
-  const nextURL = shouldUseLocalRewrite
-    ? urlJoin(url.origin, nextPathname)
-    : nextPathname;
 
   logDefault('URL rewrite: %O', {
-    isDocker,
-    isLocalRewrite: shouldUseLocalRewrite,
     nextPathname: nextPathname,
-    nextURL: nextURL,
     originalPathname: url.pathname,
   });
 
+  // Simple rewrite without complex logic
   url.pathname = nextPathname;
-
-  return NextResponse.rewrite(url, { status: 200 });
+  return NextResponse.rewrite(url);
 };
 
 // Thay đổi isProtectedRoute để bảo vệ tất cả các routes, không chỉ các routes được liệt kê

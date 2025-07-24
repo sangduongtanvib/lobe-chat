@@ -4,9 +4,6 @@ import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
 import ReactComponentName from 'react-scan/react-component-name/webpack';
 
-// Import WAF HTML rewriter plugin
-const WAFHTMLRewriterPlugin = require('./src/utils/waf-html-rewriter-plugin');
-
 const isProd = process.env.NODE_ENV === 'production';
 const buildWithDocker = process.env.DOCKER === 'true';
 const isDesktop = process.env.NEXT_PUBLIC_IS_DESKTOP_APP === '1';
@@ -22,6 +19,8 @@ const standaloneConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingIncludes: { '*': ['public/**/*', '.next/static/**/*'] },
 };
+
+
 
 const nextConfig: NextConfig = {
   ...(isStandaloneMode ? standaloneConfig : {}),
@@ -235,100 +234,18 @@ const nextConfig: NextConfig = {
       },
 
       // ===== WAF-FRIENDLY URL MAPPINGS =====
-      // Core Next.js static files rewrites
+      // These rewrites work with post-build symlinks to provide WAF-friendly URLs
       {
         destination: '/_next/static/chunks/:path*',
-        source: '/static/js/:path*',
+        source: '/chunks/:path*',
       },
       {
         destination: '/_next/static/css/:path*',
-        source: '/static/css/:path*',
+        source: '/styles/:path*',
       },
       {
         destination: '/_next/static/media/:path*',
-        source: '/static/media/:path*',
-      },
-      {
-        destination: '/_next/static/:path*',
-        source: '/nextjs-static/:path*',
-      },
-
-      // Safe chunk patterns for WAF
-      {
-        destination: '/_next/static/chunks/:path*',
-        source: '/safe-chunks/:path*',
-      },
-      {
-        destination: '/_next/static/chunks/:path*',
-        source: '/js-chunks/:path*',
-      },
-      {
-        destination: '/_next/static/chunks/:path*',
-        source: '/waf-chunks/:path*',
-      },
-
-      // Handle app router dynamic routes with brackets
-      {
-        destination: '/_next/static/chunks/app/:path*',
-        source: '/app-safe/:path*',
-      },
-
-      // Handle variant patterns (encoded brackets)
-      {
-        destination: '/_next/static/chunks/app/v/%5Bvariant%5D/:path*',
-        source: '/app-chunks/variant/:path*',
-      },
-
-      // Handle auth dynamic routes
-      {
-        destination: '/api/auth/%5B...nextauth%5D/:path*',
-        source: '/api/auth-safe/:path*',
-      },
-
-      // Handle file routes with brackets
-      {
-        destination: '/api/offline-fonts/%5B...slug%5D/:path*',
-        source: '/api/fonts-safe/:path*',
-      },
-
-      // Handle login dynamic routes
-      {
-        destination: '/login/%5B%5B...login%5D%5D/:path*',
-        source: '/login-safe/:path*',
-      },
-
-      // General WAF-safe patterns for any static file with special characters
-      {
-        destination: '/_next/static/:path*',
-        source: '/waf-safe/:path*',
-      },
-
-      // Handle pages with parentheses in route groups
-      {
-        destination: '/backend/:path*',
-        source: '/backend-safe/:path*',
-      },
-
-      // Handle TRPC routes with brackets
-      {
-        destination: '/trpc/lambda/%5Btrpc%5D/:path*',
-        source: '/trpc-lambda-safe/:path*',
-      },
-      {
-        destination: '/trpc/tools/%5Btrpc%5D/:path*',
-        source: '/trpc-tools-safe/:path*',
-      },
-
-      // Handle any remaining encoded characters in URLs
-      {
-        destination: '/:path*',
-        has: [
-          {
-            key: 'original',
-            type: 'query',
-          },
-        ],
-        source: '/decode/:path*',
+        source: '/media/:path*',
       },
     ];
   },
@@ -342,15 +259,6 @@ const nextConfig: NextConfig = {
       asyncWebAssembly: true,
       layers: true,
     };
-
-    // Add WAF HTML rewriter plugin for both development and production
-    config.plugins = config.plugins || [];
-    config.plugins.push(
-      new WAFHTMLRewriterPlugin({
-        development: !isProd,
-        production: isProd,
-      }),
-    );
 
     // 开启该插件会导致 pglite 的 fs bundler 被改表
     if (enableReactScan && !isUsePglite) {
