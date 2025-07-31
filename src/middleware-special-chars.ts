@@ -1,4 +1,4 @@
-// src/middleware.ts - Middleware với special characters encoding và giữ nguyên domain chunks
+// src/middleware.ts - Middleware để encode special characters trong response
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import debug from 'debug';
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,140 +22,80 @@ import { oidcEnv } from './envs/oidc';
 const logDefault = debug('middleware:default');
 const logNextAuth = debug('middleware:next-auth');
 const logClerk = debug('middleware:clerk');
-const logSpecialChars = debug('middleware:special-chars');
+const logSpecialChars = debug('middleware:special-chars'); // 🆕
 
 // OIDC session pre-sync constant
 const OIDC_SESSION_HEADER = 'x-oidc-session-sync';
 
-// WAF-safe mapping theo yêu cầu user 
-const URL_TO_CUSTOM_MAP = {
-  '%40': '_at_', // @ -> _at_
-  '%5B': '_ob_', // [ -> _ob_ (open bracket)
-  '%5D': '_cb_', // ] -> _cb_ (close bracket)
-  '%28': '_op_', // ( -> _op_ (open paren)
-  '%29': '_cp_', // ) -> _cp_ (close paren)
-  '@': '_at_',   // Direct @ -> _at_
-  '[': '_ob_',   // Direct [ -> _ob_
-  ']': '_cb_',   // Direct ] -> _cb_
-  '(': '_op_',   // Direct ( -> _op_
-  ')': '_cp_'    // Direct ) -> _cp_
+
+
+// Character encoding map  
+const CHAR_ENCODE_MAP = {
+  '[': 'vo',
+  ']': 'vc', 
+  '(': 'to',
+  ')': 'tc',
+  '@': 'ac'
 } as const;
 
-// Custom encoding back to original character
-const CUSTOM_TO_CHAR_MAP = {
-  '_at_': '@',
-  '_ob_': '[', 
-  '_cb_': ']',
-  '_op_': '(',
-  '_cp_': ')'
+// Character decoding map (reverse)
+const CHAR_DECODE_MAP = {
+  'vo': '[',
+  'vc': ']',
+  'to': '(',
+  'tc': ')',
+  'ac': '@'
 } as const;
 
 /**
- * Convert URL encoding và direct chars to custom encoding (safe replacement)
+ * Encode special characters in text
  */
-function convertToCustomEncoding(text: string): string {
+function encodeSpecialChars(text: string): string {
   let encodedText = text;
-  
-  // Handle URL encoded chars first (longer patterns first to avoid conflicts)
-  const urlEncodedPatterns = ['%40', '%5B', '%5D', '%28', '%29'] as const;
-  for (const pattern of urlEncodedPatterns) {
-    if (URL_TO_CUSTOM_MAP[pattern]) {
-      encodedText = encodedText.replaceAll(pattern, URL_TO_CUSTOM_MAP[pattern]);
-    }
+  for (const [char, replacement] of Object.entries(CHAR_ENCODE_MAP)) {
+    encodedText = encodedText.replaceAll(char, replacement);
   }
-  
-  // Handle direct characters (single chars)
-  const directPatterns = ['@', '[', ']', '(', ')'] as const;
-  for (const pattern of directPatterns) {
-    if (URL_TO_CUSTOM_MAP[pattern]) {
-      encodedText = encodedText.replaceAll(pattern, URL_TO_CUSTOM_MAP[pattern]);
-    }
-  }
-  
   return encodedText;
 }
 
 /**
- * Convert custom encoding back to original characters
- * NOTE: Risk of partial matching, nhưng theo user requirement
+ * Decode special characters back to original
  */
-function convertFromCustomEncoding(text: string): string {
+function decodeSpecialChars(text: string): string {
   let decodedText = text;
-  
-  // Process in order để tránh conflicts
-  const orderedMappings = [
-    ['vo', '['],
-    ['vc', ']'], 
-    ['to', '('],
-    ['tc', ')'],
-    ['ac', '@']
-  ];
-  
-  for (const [custom, char] of orderedMappings) {
-    decodedText = decodedText.replaceAll(custom, char);
+  for (const [encoded, char] of Object.entries(CHAR_DECODE_MAP)) {
+    decodedText = decodedText.replaceAll(encoded, char);
   }
-  
   return decodedText;
 }
 
 /**
- * Handle dual-layer encoding: URL encoding from browser + custom encoding for server
+ * Handle special characters encoding/decoding for static files
  */
 const handleSpecialCharsRewrite = (request: NextRequest): NextResponse | null => {
   const url = request.nextUrl.clone();
   
-  // Handle multiple types of resources that might contain special characters
-  const shouldHandle = (
-    url.pathname.startsWith('/_next/static/') ||     // NextJS static assets
-    url.pathname.startsWith('/_next/image/') ||      // NextJS optimized images
-    url.pathname.startsWith('/api/') ||              // API routes
-    url.pathname.startsWith('/webapi/') ||           // Web API routes
-    url.pathname.startsWith('/trpc/') ||             // TRPC routes
-    url.pathname.startsWith('/images/') ||           // Static images
-    url.pathname.startsWith('/icons/') ||            // Static icons
-    url.pathname.startsWith('/videos/') ||           // Static videos
-    url.pathname.startsWith('/fonts/') ||            // Font files
-    url.pathname.match(/\.(js|css|json|svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)(\?.*)?$/) // File extensions
-  );
-  
-  if (!shouldHandle) {
+  // Only handle static files
+  if (!url.pathname.startsWith('/_next/static/')) {
     return null;
   }
   
-  // Check if URL contains our target chars (URL encoded or custom encoded)
-  const hasUrlEncoding = /%[0-9A-Fa-f]{2}/.test(url.pathname);
-  const hasCustomEncoding = Object.keys(CUSTOM_TO_CHAR_MAP).some(custom => 
-    url.pathname.includes(custom)
+  // Check if URL contains encoded special characters (from client)
+  const hasEncodedChars = Object.keys(CHAR_DECODE_MAP).some(encoded => 
+    url.pathname.includes(encoded)
   );
   
-  if (hasUrlEncoding) {
-    // Step 1: Browser sent URL encoded -> convert to custom encoding for server
-    const customEncodedPath = convertToCustomEncoding(url.pathname);
+  if (hasEncodedChars) {
+    // Decode for server request
+    const decodedPath = decodeSpecialChars(url.pathname);
     
-    logSpecialChars('🔄 URL→Custom encoding: %s → %s', url.pathname, customEncodedPath);
-    
-    url.pathname = customEncodedPath;
-    const response = NextResponse.rewrite(url);
-    
-    // Add debug headers
-    response.headers.set('X-URL-To-Custom', 'true');
-    response.headers.set('X-Original-Path', request.nextUrl.pathname);
-    response.headers.set('X-Custom-Path', customEncodedPath);
-    
-    return response;
-  }
-  
-  if (hasCustomEncoding) {
-    // Step 2: Custom encoded request -> decode to original chars for file system
-    const decodedPath = convertFromCustomEncoding(url.pathname);
-    
-    logSpecialChars('🔄 Custom→Original decoding: %s → %s', url.pathname, decodedPath);
+    logSpecialChars('🔄 Decoding static file: %s → %s', url.pathname, decodedPath);
     
     url.pathname = decodedPath;
     const response = NextResponse.rewrite(url);
     
-    // Add debug headers  
-    response.headers.set('X-Custom-To-Original', 'true');
+    // Add debug headers
+    response.headers.set('X-Special-Chars-Decoded', 'true');
     response.headers.set('X-Original-Path', request.nextUrl.pathname);
     response.headers.set('X-Decoded-Path', decodedPath);
     
@@ -166,7 +106,7 @@ const handleSpecialCharsRewrite = (request: NextRequest): NextResponse | null =>
 };
 
 /**
- * Transform response content to encode special characters (giữ domain chunks)
+ * Transform response content to encode special characters
  */
 async function transformResponseContent(response: NextResponse, request: NextRequest): Promise<NextResponse> {
   try {
@@ -183,7 +123,7 @@ async function transformResponseContent(response: NextResponse, request: NextReq
     const originalText = await response.text();
     
     // Check if content has special characters in static file paths
-    const hasSpecialChars = ['@', '[', ']', '(', ')'].some(char => 
+    const hasSpecialChars = Object.keys(CHAR_ENCODE_MAP).some(char => 
       originalText.includes(`/_next/static/`) && originalText.includes(char)
     );
     
@@ -196,18 +136,18 @@ async function transformResponseContent(response: NextResponse, request: NextReq
       });
     }
     
-    // Convert special characters to custom encoding in static file paths
+    // Encode special characters in static file paths only
     let modifiedText = originalText;
     
-    // Use regex to find and encode static file paths (quoted)
+    // Use regex to find and encode static file paths
     modifiedText = modifiedText.replace(
       /(["'])(.*?\/_next\/static\/[^"']*)(["'])/g,
       (match, quote1, path, quote2) => {
-        const customEncodedPath = convertToCustomEncoding(path);
-        if (customEncodedPath !== path) {
-          logSpecialChars('✨ Converting to custom encoding in response: %s → %s', path, customEncodedPath);
+        const encodedPath = encodeSpecialChars(path);
+        if (encodedPath !== path) {
+          logSpecialChars('✨ Encoding in response: %s → %s', path, encodedPath);
         }
-        return quote1 + customEncodedPath + quote2;
+        return quote1 + encodedPath + quote2;
       }
     );
     
@@ -215,11 +155,11 @@ async function transformResponseContent(response: NextResponse, request: NextReq
     modifiedText = modifiedText.replace(
       /(\/_next\/static\/[^\s,"'\[\]{}]+)/g,
       (match, path) => {
-        const customEncodedPath = convertToCustomEncoding(path);
-        if (customEncodedPath !== path) {
-          logSpecialChars('✨ Converting JSON path to custom: %s → %s', path, customEncodedPath);
+        const encodedPath = encodeSpecialChars(path);
+        if (encodedPath !== path) {
+          logSpecialChars('✨ Encoding JSON path: %s → %s', path, encodedPath);
         }
-        return customEncodedPath;
+        return encodedPath;
       }
     );
     
@@ -269,7 +209,7 @@ export const config = {
     '/next-auth/(.*)',
     '/oauth(.*)',
     '/oidc(.*)',
-    // Include static files for special chars handling
+    // 🆕 Include static files for special chars handling
     '/_next/static/:path*',
     // ↓ cloud ↓
   ],
@@ -281,7 +221,7 @@ const defaultMiddleware = async (request: NextRequest) => {
   const url = new URL(request.url);
   logDefault('Processing request: %s %s', request.method, request.url);
 
-  // CHECK SPECIAL CHARS REWRITE FIRST
+  // 🆕 CHECK SPECIAL CHARS REWRITE FIRST
   const specialCharsResponse = handleSpecialCharsRewrite(request);
   if (specialCharsResponse) {
     logDefault('Request handled by special chars rewrite');
@@ -307,15 +247,8 @@ const defaultMiddleware = async (request: NextRequest) => {
   const theme =
     request.cookies.get(LOBE_THEME_APPEARANCE)?.value || parseDefaultThemeFromCountry(request);
 
-  // locale has three levels
-  // 1. search params
-  // 2. cookie
-  // 3. browser
-
-  // highest priority is explicitly in search params, like ?hl=zh-CN
+  // locale handling
   const explicitlyLocale = (url.searchParams.get('hl') || undefined) as Locales | undefined;
-
-  // if it's a new user, there's no cookie, So we need to use the fallback language parsed by accept-language
   const browserLanguage = parseBrowserLanguage(request.headers);
 
   const locale =
@@ -323,7 +256,6 @@ const defaultMiddleware = async (request: NextRequest) => {
     ((request.cookies.get(LOBE_LOCALE_COOKIE)?.value || browserLanguage) as Locales);
 
   const ua = request.headers.get('user-agent');
-
   const device = new UAParser(ua || '').getDevice();
 
   logDefault('User preferences: %O', {
@@ -347,41 +279,19 @@ const defaultMiddleware = async (request: NextRequest) => {
   logDefault('Serialized route variant: %s', route);
 
   // if app is in docker, rewrite to self container
-  // https://github.com/lobehub/lobe-chat/issues/5876
   if (appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL) {
-    logDefault('Local container rewrite enabled: %O', {
-      host: '127.0.0.1',
-      original: url.toString(),
-      port: process.env.PORT || '3210',
-      protocol: 'http',
-    });
-
+    logDefault('Local container rewrite enabled');
     url.protocol = 'http';
     url.host = '127.0.0.1';
     url.port = process.env.PORT || '3210';
   }
 
-  // refs: https://github.com/lobehub/lobe-chat/pull/5866
-  // new handle segment rewrite: /${route}${originalPathname}
-  // / -> /zh-CN__0__dark
-  // /discover -> /zh-CN__0__dark/discover
   const nextPathname = `/${route}` + (url.pathname === '/' ? '' : url.pathname);
-  const nextURL = appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL
-    ? urlJoin(url.origin, nextPathname)
-    : nextPathname;
-
-  logDefault('URL rewrite: %O', {
-    isLocalRewrite: appEnv.MIDDLEWARE_REWRITE_THROUGH_LOCAL,
-    nextPathname: nextPathname,
-    nextURL: nextURL,
-    originalPathname: url.pathname,
-  });
-
   url.pathname = nextPathname;
 
   const response = NextResponse.rewrite(url, { status: 200 });
 
-  // Transform response if needed (async operation)
+  // 🆕 Transform response if needed (async operation)
   if (shouldTransformResponse) {
     return transformResponseContent(response, request);
   }
@@ -389,18 +299,15 @@ const defaultMiddleware = async (request: NextRequest) => {
   return response;
 };
 
+// ... (keep other middleware functions unchanged)
 const isPublicRoute = createRouteMatcher([
-  // backend api
   '/api/auth(.*)',
   '/api/webhooks(.*)',
   '/webapi(.*)',
   '/trpc(.*)',
-  // next auth
   '/next-auth/(.*)',
-  // clerk
   '/login',
   '/signup',
-  // oauth
   '/oidc/handoff',
   '/oidc/token',
 ]);
@@ -410,10 +317,8 @@ const isProtectedRoute = createRouteMatcher([
   '/files(.*)',
   '/onboard(.*)',
   '/oauth(.*)',
-  // ↓ cloud ↓
 ]);
 
-// Initialize an Edge compatible NextAuth middleware
 const nextAuthMiddleware = NextAuthEdge.auth(async (req) => {
   logNextAuth('NextAuth middleware processing request: %s %s', req.method, req.url);
 
@@ -425,45 +330,20 @@ const nextAuthMiddleware = NextAuthEdge.auth(async (req) => {
 
   const response = await defaultMiddleware(req);
 
-  // when enable auth protection, only public route is not protected, others are all protected
   const isProtected = appEnv.ENABLE_AUTH_PROTECTION ? !isPublicRoute(req) : isProtectedRoute(req);
-
-  logNextAuth('Route protection status: %s, %s', req.url, isProtected ? 'protected' : 'public');
-
-  // Just check if session exists
   const session = req.auth;
-
-  // Check if next-auth throws errors
-  // refs: https://github.com/lobehub/lobe-chat/pull/1323
   const isLoggedIn = !!session?.expires;
 
-  logNextAuth('NextAuth session status: %O', {
-    expires: session?.expires,
-    isLoggedIn,
-    userId: session?.user?.id,
-  });
-
-  // Remove & amend OAuth authorized header
   response.headers.delete(OAUTH_AUTHORIZED);
   if (isLoggedIn) {
-    logNextAuth('Setting auth header: %s = %s', OAUTH_AUTHORIZED, 'true');
     response.headers.set(OAUTH_AUTHORIZED, 'true');
-
-    // If OIDC is enabled and user is logged in, add OIDC session pre-sync header
     if (oidcEnv.ENABLE_OIDC && session?.user?.id) {
-      logNextAuth('OIDC session pre-sync: Setting %s = %s', OIDC_SESSION_HEADER, session.user.id);
       response.headers.set(OIDC_SESSION_HEADER, session.user.id);
     }
-  } else {
-    // If request a protected route, redirect to sign-in page
-    // ref: https://authjs.dev/getting-started/session-management/protecting
-    if (isProtected) {
-      logNextAuth('Request a protected route, redirecting to sign-in page');
-      const nextLoginUrl = new URL('/next-auth/signin', req.nextUrl.origin);
-      nextLoginUrl.searchParams.set('callbackUrl', req.nextUrl.href);
-      return Response.redirect(nextLoginUrl);
-    }
-    logNextAuth('Request a free route but not login, allow visit without auth header');
+  } else if (isProtected) {
+    const nextLoginUrl = new URL('/next-auth/signin', req.nextUrl.origin);
+    nextLoginUrl.searchParams.set('callbackUrl', req.nextUrl.href);
+    return Response.redirect(nextLoginUrl);
   }
 
   return response;
@@ -471,44 +351,29 @@ const nextAuthMiddleware = NextAuthEdge.auth(async (req) => {
 
 const clerkAuthMiddleware = clerkMiddleware(
   async (auth, req) => {
-    logClerk('Clerk middleware processing request: %s %s', req.method, req.url);
+    logClerk('Clerk middleware processing request');
 
-    // Handle special chars first
     const specialCharsResponse = handleSpecialCharsRewrite(req);
     if (specialCharsResponse) {
       return specialCharsResponse;
     }
 
-    // when enable auth protection, only public route is not protected, others are all protected
     const isProtected = appEnv.ENABLE_AUTH_PROTECTION ? !isPublicRoute(req) : isProtectedRoute(req);
 
-    logClerk('Route protection status: %s, %s', req.url, isProtected ? 'protected' : 'public');
-
     if (isProtected) {
-      logClerk('Protecting route: %s', req.url);
       await auth.protect();
     }
 
     const response = await defaultMiddleware(req);
-
     const data = await auth();
-    logClerk('Clerk auth status: %O', {
-      isSignedIn: !!data.userId,
-      userId: data.userId,
-    });
 
-    // If OIDC is enabled and Clerk user is logged in, add OIDC session pre-sync header
     if (oidcEnv.ENABLE_OIDC && data.userId) {
-      logClerk('OIDC session pre-sync: Setting %s = %s', OIDC_SESSION_HEADER, data.userId);
       response.headers.set(OIDC_SESSION_HEADER, data.userId);
-    } else if (oidcEnv.ENABLE_OIDC) {
-      logClerk('No Clerk user detected, not setting OIDC session sync header');
     }
 
     return response;
   },
   {
-    // https://github.com/lobehub/lobe-chat/pull/3084
     clockSkewInMs: 60 * 60 * 1000,
     signInUrl: '/login',
     signUpUrl: '/signup',
@@ -520,14 +385,7 @@ logDefault('Middleware configuration: %O', {
   enableClerk: authEnv.NEXT_PUBLIC_ENABLE_CLERK_AUTH,
   enableNextAuth: authEnv.NEXT_PUBLIC_ENABLE_NEXT_AUTH,
   enableOIDC: oidcEnv.ENABLE_OIDC,
-  dualLayerEncoding: true, // URL encoding + custom encoding
-  mappings: {
-    '%40/@': 'ac',
-    '%5B/[': 'vo', 
-    '%5D/]': 'vc',
-    '%28/(': 'to',
-    '%29/)': 'tc'
-  }
+  specialCharsEncoding: true, // 🆕
 });
 
 export default authEnv.NEXT_PUBLIC_ENABLE_CLERK_AUTH

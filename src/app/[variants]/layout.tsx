@@ -6,6 +6,7 @@ import { ReactNode } from 'react';
 import { isRtlLang } from 'rtl-detect';
 
 import Analytics from '@/components/Analytics';
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import { DEFAULT_LANG } from '@/const/locale';
 import { isDesktop } from '@/const/version';
 import PWAInstall from '@/features/PWAInstall';
@@ -53,6 +54,7 @@ const RootLayout = async ({ children, params, modal }: RootLayoutProps) => {
             <PWAInstall />
           </GlobalProvider>
         </NuqsAdapter>
+        <ServiceWorkerRegister />
         <Analytics />
         {inVercel && <SpeedInsights />}
       </body>
